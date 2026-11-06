@@ -56,3 +56,4 @@ async def get_current_tenant(
 ) -> uuid.UUID:
     """Dependency returning the verified tenant_id of the authenticated caller."""
     return current_user.tenant_id
+

@@ -82,3 +82,4 @@ curl -X POST http://localhost:8000/auth/register \
 ## 6. Known Limits
 - Refresh tokens are omitted in MVP; sessions expire based on `JWT_EXPIRE_MINUTES`.
 - Password reset and email confirmation flows are scheduled for Phase 2.
+

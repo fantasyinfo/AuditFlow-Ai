@@ -47,3 +47,4 @@ async def get_me(
 ) -> CurrentUser:
     """Return the profile and tenant context for the authenticated user."""
     return current_user
+

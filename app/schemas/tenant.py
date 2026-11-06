@@ -16,3 +16,4 @@ class TenantRead(TenantBase):
 
     id: uuid.UUID
     created_at: datetime
+

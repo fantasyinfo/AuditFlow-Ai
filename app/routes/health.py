@@ -31,3 +31,4 @@ async def health_check(
         status_code=status.HTTP_200_OK,
         content={"status": "healthy", "database": "connected"},
     )
+

@@ -41,3 +41,4 @@ app.include_router(auth_router)
 @app.get("/", include_in_schema=False)
 async def root() -> dict[str, str]:
     return {"message": "AuditFlow AI API is running", "docs": "/docs"}
+

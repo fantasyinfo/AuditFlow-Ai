@@ -5,3 +5,4 @@ from app.worker.celery_app import celery_app
 def process_document(document_id: str) -> dict[str, str]:
     """Placeholder task for document processing pipeline."""
     return {"document_id": document_id, "status": "queued"}
+

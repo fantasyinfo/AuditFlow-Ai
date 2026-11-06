@@ -59,3 +59,4 @@ def get_sync_db() -> Generator[Session, None, None]:
         yield session
     finally:
         session.close()
+

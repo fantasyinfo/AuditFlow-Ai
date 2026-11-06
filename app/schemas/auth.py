@@ -40,3 +40,4 @@ class CurrentUser(BaseModel):
     tenant_id: uuid.UUID
     email: EmailStr
     role: str
+
