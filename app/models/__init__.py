@@ -1,3 +1,4 @@
+from app.models.chunk import DocumentChunk
 from app.models.document import Document, DocumentStatus, DocumentType
 from app.models.idempotency import IdempotencyKey
 from app.models.invoice import Invoice
@@ -11,6 +12,7 @@ __all__ = [
     "Document",
     "DocumentStatus",
     "DocumentType",
+    "DocumentChunk",
     "Invoice",
     "PurchaseOrder",
     "IdempotencyKey",

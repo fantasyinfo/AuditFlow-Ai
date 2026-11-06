@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.models.chunk import DocumentChunk
 from app.schemas.auth import CurrentUser
+from app.schemas.chunk import ChunkRead
 from app.schemas.document import DocumentRead, DocumentUploadResponse
 from app.services.document_service import DocumentService
 from app.services.idempotency_service import IdempotencyService
@@ -88,6 +90,32 @@ async def get_document(
             detail="Document not found.",
         )
     return DocumentRead.model_validate(doc)
+
+
+@router.get(
+    "/{document_id}/chunks",
+    response_model=list[ChunkRead],
+    summary="Get extracted text chunks for a document",
+)
+async def get_document_chunks(
+    document_id: uuid.UUID,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> list[ChunkRead]:
+    """Retrieve all chunks belonging to a document, strictly scoped to caller's tenant."""
+    from sqlalchemy import select
+
+    query = (
+        select(DocumentChunk)
+        .where(
+            DocumentChunk.document_id == document_id,
+            DocumentChunk.tenant_id == current_user.tenant_id,
+        )
+        .order_by(DocumentChunk.chunk_index.asc())
+    )
+    result = await session.execute(query)
+    chunks = result.scalars().all()
+    return [ChunkRead.model_validate(c) for c in chunks]
 
 
 @router.get(

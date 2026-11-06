@@ -19,7 +19,7 @@ HTML_CONTENT = """<!DOCTYPE html>
   </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
-  <div class="max-w-6xl mx-auto space-y-6">
+  <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- Top Navigation Header -->
     <header class="flex flex-col md:flex-row items-center justify-between card p-6 gap-4">
@@ -28,7 +28,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">AuditFlow AI <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/30">MVP Testbed</span></h1>
+          <h1 class="text-xl font-bold tracking-tight">AuditFlow AI <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/30">Day 3 MVP</span></h1>
           <p class="text-xs text-slate-400">AP Audit & Fraud Detection Live Pipeline Tester</p>
         </div>
       </div>
@@ -112,12 +112,24 @@ HTML_CONTENT = """<!DOCTYPE html>
           </button>
         </div>
 
+        <!-- Document Chunks Preview Modal/Panel -->
+        <div id="chunksCard" class="card p-5 space-y-3 hidden">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-semibold uppercase text-indigo-400 tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-cubes"></i> Extracted Chunks
+            </h3>
+            <button onclick="closeChunksPanel()" class="text-xs text-slate-400 hover:text-white">✕</button>
+          </div>
+          <p class="text-[11px] text-slate-400">Document: <span id="chunkDocName" class="text-slate-200 font-mono"></span></p>
+          <div id="chunksList" class="space-y-2 max-h-60 overflow-y-auto text-xs font-mono text-slate-300"></div>
+        </div>
+
       </div>
 
-      <!-- Column 2 & 3: Document Ingest & Live Queue -->
+      <!-- Column 2 & 3: Document Ingest, Live Queue & Extracted Invoices -->
       <div class="lg:col-span-2 space-y-6">
 
-        <!-- Document Upload Card (Day 2) -->
+        <!-- Document Upload Card (Day 2 & 3) -->
         <div class="card p-6 space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-base font-semibold text-white flex items-center gap-2">
@@ -160,7 +172,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <h2 class="text-base font-semibold text-white flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-indigo-400"></i> Tenant Documents & Queue Status
+                <i class="fa-solid fa-list-check text-indigo-400"></i> Uploaded Documents & Chunks
               </h2>
               <span id="docCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">0</span>
             </div>
@@ -169,7 +181,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                 <input id="autoRefreshCheckbox" type="checkbox" checked class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0">
                 Auto-poll (2s)
               </label>
-              <button onclick="loadDocuments()" class="p-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-700 transition" title="Refresh Now">
+              <button onclick="refreshData()" class="p-1.5 text-slate-400 hover:text-white rounded hover:bg-slate-700 transition" title="Refresh Now">
                 <i class="fa-solid fa-rotate"></i>
               </button>
             </div>
@@ -183,12 +195,43 @@ HTML_CONTENT = """<!DOCTYPE html>
                   <th class="py-2.5 px-3">Type</th>
                   <th class="py-2.5 px-3">Status</th>
                   <th class="py-2.5 px-3">Created</th>
-                  <th class="py-2.5 px-3">ID</th>
+                  <th class="py-2.5 px-3">Chunks</th>
                 </tr>
               </thead>
               <tbody id="documentsTableBody" class="divide-y divide-slate-800">
                 <tr>
                   <td colspan="5" class="py-6 text-center text-slate-500">Sign in to view your documents</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Extracted Invoices Table (Day 3) -->
+        <div class="card p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i> Extracted Invoices (RAG Parser)
+              </h2>
+              <span id="invoiceCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">0</span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800/60 uppercase text-[10px] text-slate-400 tracking-wider">
+                <tr>
+                  <th class="py-2.5 px-3">Invoice #</th>
+                  <th class="py-2.5 px-3">Vendor</th>
+                  <th class="py-2.5 px-3">Amount</th>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">GSTIN</th>
+                </tr>
+              </thead>
+              <tbody id="invoicesTableBody" class="divide-y divide-slate-800">
+                <tr>
+                  <td colspan="5" class="py-6 text-center text-slate-500">No invoices extracted yet</td>
                 </tr>
               </tbody>
             </table>
@@ -213,7 +256,6 @@ HTML_CONTENT = """<!DOCTYPE html>
   <script>
     let token = localStorage.getItem("auditflow_token") || "";
     let currentUser = null;
-    let pollInterval = null;
 
     function logResponse(status, data) {
       const viewer = document.getElementById("apiResponseView");
@@ -320,7 +362,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       token = newToken;
       localStorage.setItem("auditflow_token", token);
       await fetchUserContext();
-      loadDocuments();
+      refreshData();
     }
 
     function logout() {
@@ -329,7 +371,10 @@ HTML_CONTENT = """<!DOCTYPE html>
       localStorage.removeItem("auditflow_token");
       updateAuthUI();
       document.getElementById("documentsTableBody").innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">Sign in to view your documents</td></tr>`;
+      document.getElementById("invoicesTableBody").innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">No invoices extracted yet</td></tr>`;
       document.getElementById("docCountBadge").textContent = "0";
+      document.getElementById("invoiceCountBadge").textContent = "0";
+      closeChunksPanel();
     }
 
     async function fetchUserContext() {
@@ -402,13 +447,18 @@ HTML_CONTENT = """<!DOCTYPE html>
 
         if (res.ok) {
           fileInput.value = "";
-          loadDocuments();
+          refreshData();
         } else {
           alert(data.detail || "Upload rejected.");
         }
       } catch (err) {
         alert("Upload error: " + err);
       }
+    }
+
+    async function refreshData() {
+      await loadDocuments();
+      await loadInvoices();
     }
 
     async function loadDocuments() {
@@ -440,13 +490,83 @@ HTML_CONTENT = """<!DOCTYPE html>
               <td class="py-2.5 px-3 uppercase text-[10px] text-slate-400">${d.type}</td>
               <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] uppercase font-semibold ${badgeColor}">${d.status}</span></td>
               <td class="py-2.5 px-3 text-slate-400">${new Date(d.created_at).toLocaleTimeString()}</td>
-              <td class="py-2.5 px-3 font-mono text-[10px] text-slate-500" title="${d.id}">${d.id.substring(0, 8)}...</td>
+              <td class="py-2.5 px-3">
+                <button onclick="viewChunks('${d.id}', '${escapeHtml(d.filename)}')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded text-[11px] transition">
+                  <i class="fa-solid fa-eye mr-1"></i> Chunks
+                </button>
+              </td>
             </tr>
           `;
         }).join("");
       } catch (err) {
         console.error("Failed to load documents", err);
       }
+    }
+
+    async function loadInvoices() {
+      if (!token) return;
+      try {
+        const res = await fetch("/invoices", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const invoices = await res.json();
+        document.getElementById("invoiceCountBadge").textContent = invoices.length;
+
+        const tbody = document.getElementById("invoicesTableBody");
+        if (invoices.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">No invoices extracted yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = invoices.map(i => `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2.5 px-3 font-mono font-medium text-indigo-300">${escapeHtml(i.invoice_number)}</td>
+            <td class="py-2.5 px-3 font-medium text-slate-200">${escapeHtml(i.vendor_name)}</td>
+            <td class="py-2.5 px-3 text-emerald-400 font-semibold font-mono">₹${Number(i.total_amount).toLocaleString()}</td>
+            <td class="py-2.5 px-3 text-slate-400">${i.invoice_date || "—"}</td>
+            <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">${i.vendor_gstin || "—"}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        console.error("Failed to load invoices", err);
+      }
+    }
+
+    async function viewChunks(docId, filename) {
+      if (!token) return;
+      try {
+        const res = await fetch(`/documents/${docId}/chunks`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) return alert("Failed to fetch chunks.");
+        const chunks = await res.json();
+
+        document.getElementById("chunkDocName").textContent = filename;
+        const listDiv = document.getElementById("chunksList");
+
+        if (chunks.length === 0) {
+          listDiv.innerHTML = `<div class="p-3 bg-slate-900 rounded text-slate-500 text-center">No chunks generated yet.</div>`;
+        } else {
+          listDiv.innerHTML = chunks.map(c => `
+            <div class="p-2.5 bg-slate-900 rounded border border-slate-800 space-y-1">
+              <div class="flex items-center justify-between text-[10px] text-indigo-400 font-semibold">
+                <span>Chunk #${c.chunk_index}</span>
+                <span>Page ${c.page || 1} • pgvector (1536d)</span>
+              </div>
+              <p class="text-slate-300 text-[11px] leading-relaxed break-words">${escapeHtml(c.text)}</p>
+            </div>
+          `).join("");
+        }
+
+        document.getElementById("chunksCard").classList.remove("hidden");
+      } catch (err) {
+        alert("Error fetching chunks: " + err);
+      }
+    }
+
+    function closeChunksPanel() {
+      document.getElementById("chunksCard").classList.add("hidden");
     }
 
     function escapeHtml(str) {
@@ -463,7 +583,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       checkHealth();
       const autoRefresh = document.getElementById("autoRefreshCheckbox").checked;
       if (autoRefresh && token) {
-        loadDocuments();
+        refreshData();
       }
     }, 2000);
   </script>
@@ -477,4 +597,3 @@ HTML_CONTENT = """<!DOCTYPE html>
 async def get_testing_dashboard() -> HTMLResponse:
     """Serve the single-page testing dashboard."""
     return HTMLResponse(content=HTML_CONTENT)
-

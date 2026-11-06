@@ -438,14 +438,15 @@ Indexes on `(tenant_id, created_at)` for every table, a unique index on `(tenant
 - [x] Self-contained Web Testing UI at `/ui` and `/dashboard` for browser verification. *(Tested & Verified)*
 - [x] *Done when:* upload returns instantly and the worker log shows the job processed. *(Tested & Verified)*
 
-**Day 3: Parsing and embeddings**
+**Day 3: Parsing and embeddings** - [x] *(Tested & Verified)*
 
-- `rag/parser.py`: PDF text with pypdf, CSV rows.
-- `rag/chunker.py` using the LangChain text splitter.
-- `rag/embedder.py`: batch embeddings through the configured API, with retry and timeout.
-- Store chunks and vectors with `tenant_id`.
-- Extract invoice fields (vendor, number, date, total, GSTIN) from CSV directly and from PDF text with a simple regex first. LLM extraction is a later upgrade.
-- *Done when:* uploading a sample invoice creates an invoice row and chunk rows.
+- [x] `rag/parser.py`: PDF text extraction with pypdf, CSV rows parsing. *(Tested & Verified)*
+- [x] `rag/chunker.py`: Text chunking with LangChain splitter, preserving page indices. *(Tested & Verified)*
+- [x] `rag/embedder.py`: 1536-dimensional embeddings (API + deterministic offline fallback). *(Tested & Verified)*
+- [x] Store chunks and vectors with `tenant_id` and HNSW pgvector index. *(Tested & Verified)*
+- [x] Extract invoice fields (vendor, number, date, total Decimal, GSTIN) from CSV and PDF regex into `invoices` table. *(Tested & Verified)*
+- [x] Web Testing Dashboard: Added extracted invoices table and document chunks inspector at `/ui`. *(Tested & Verified)*
+- [x] *Done when:* uploading a sample invoice creates an invoice row and chunk rows. *(Tested & Verified - All 10 tests passing)*
 
 **Day 4: Rules engine**
 
