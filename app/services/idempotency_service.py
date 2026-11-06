@@ -50,3 +50,4 @@ class IdempotencyService:
         )
         session.add(record)
         await session.commit()
+

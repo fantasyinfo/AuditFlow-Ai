@@ -109,3 +109,4 @@ async def list_documents(
         offset=offset,
     )
     return [DocumentRead.model_validate(d) for d in docs]
+

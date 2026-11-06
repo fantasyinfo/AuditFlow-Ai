@@ -477,3 +477,4 @@ HTML_CONTENT = """<!DOCTYPE html>
 async def get_testing_dashboard() -> HTMLResponse:
     """Serve the single-page testing dashboard."""
     return HTMLResponse(content=HTML_CONTENT)
+

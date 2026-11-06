@@ -20,3 +20,4 @@ class PurchaseOrderRead(PurchaseOrderBase):
     id: uuid.UUID
     tenant_id: uuid.UUID
     created_at: datetime
+

@@ -69,3 +69,4 @@ Open your browser at `http://localhost:8000/ui` to upload files, test idempotenc
 ## 6. Known Limits
 - Files are saved to local volume (`/data/uploads`); S3/MinIO cloud adapter will be added in Phase 2.
 - Worker currently transitions status from `queued` $\to$ `processing` $\to$ `done`; text chunking and vector embeddings are integrated in Day 3.
+

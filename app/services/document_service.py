@@ -103,3 +103,4 @@ class DocumentService:
         )
         result = await session.execute(query)
         return list(result.scalars().all())
+

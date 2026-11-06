@@ -24,3 +24,4 @@ class InvoiceRead(InvoiceBase):
     tenant_id: uuid.UUID
     document_id: uuid.UUID | None = None
     created_at: datetime
+
