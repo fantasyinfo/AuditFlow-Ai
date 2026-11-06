@@ -1,3 +1,4 @@
+from app.schemas.agent import AgentAskRequest, AgentAskResponse, AgentCitation
 from app.schemas.audit_log import AuditLogRead
 from app.schemas.auth import (
     CurrentUser,
@@ -47,4 +48,7 @@ __all__ = [
     "FindingStatus",
     "FindingSeverity",
     "AuditLogRead",
+    "AgentAskRequest",
+    "AgentAskResponse",
+    "AgentCitation",
 ]

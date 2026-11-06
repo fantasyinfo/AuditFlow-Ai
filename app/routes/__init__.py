@@ -1,3 +1,4 @@
+from app.routes.agent import router as agent_router
 from app.routes.auth import router as auth_router
 from app.routes.documents import router as documents_router
 from app.routes.findings import router as findings_router
@@ -11,5 +12,7 @@ __all__ = [
     "documents_router",
     "invoices_router",
     "findings_router",
+    "agent_router",
     "ui_router",
 ]
+

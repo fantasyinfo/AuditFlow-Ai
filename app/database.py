@@ -52,6 +52,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
+get_async_db = get_db
+
+
 def get_sync_db() -> Generator[Session, None, None]:
     """Synchronous context manager / generator yielding a sync database session for workers."""
     session = SyncSessionLocal()

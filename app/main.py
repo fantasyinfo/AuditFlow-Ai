@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.routes.agent import router as agent_router
 from app.routes.auth import router as auth_router
 from app.routes.documents import router as documents_router
 from app.routes.findings import router as findings_router
@@ -43,6 +44,7 @@ app.include_router(auth_router)
 app.include_router(documents_router)
 app.include_router(invoices_router)
 app.include_router(findings_router)
+app.include_router(agent_router)
 app.include_router(ui_router)
 
 
