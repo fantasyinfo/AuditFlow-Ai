@@ -55,3 +55,4 @@ async def get_invoice(
             detail="Invoice not found.",
         )
     return InvoiceRead.model_validate(invoice)
+

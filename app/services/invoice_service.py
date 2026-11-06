@@ -38,3 +38,4 @@ class InvoiceService:
         )
         result = await session.execute(query)
         return result.scalars().first()
+

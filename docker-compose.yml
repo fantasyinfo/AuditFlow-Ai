@@ -33,6 +33,8 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-auditflow}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-auditflow}
       - SYNC_DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-auditflow}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-auditflow}
       - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - .:/code
     depends_on:
       db:
         condition: service_healthy

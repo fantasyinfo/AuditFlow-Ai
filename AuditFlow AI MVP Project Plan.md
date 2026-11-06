@@ -448,13 +448,14 @@ Indexes on `(tenant_id, created_at)` for every table, a unique index on `(tenant
 - [x] Web Testing Dashboard: Added extracted invoices table and document chunks inspector at `/ui`. *(Tested & Verified)*
 - [x] *Done when:* uploading a sample invoice creates an invoice row and chunk rows. *(Tested & Verified - All 10 tests passing)*
 
-**Day 4: Rules engine**
+**Day 4: Rules engine** - [x] *(Tested & Verified)*
 
-- One file per rule, each a plain function: `check_duplicate(invoice, db)` returning a finding or nothing.
-- `run_rules.py` runs all rules, called by the worker after parsing.
-- `GET /findings`, `PATCH /findings/{id}` and audit log entries.
-- Unit tests for every rule using small fixed examples.
-- *Done when:* a seeded duplicate invoice produces a finding.
+- [x] One file per rule, each a plain function: `check_duplicate(invoice, db)` returning a finding or nothing. *(Tested & Verified - 5 rules implemented)*
+- [x] `run_rules.py` runs all rules, called by the worker after parsing. *(Tested & Verified)*
+- [x] `GET /findings`, `PATCH /findings/{id}` and audit log entries. *(Tested & Verified)*
+- [x] Unit tests for every rule using small fixed examples. *(Tested & Verified - All 16 tests passing)*
+- [x] Web Testing Dashboard: Findings review & audit log timeline at `/ui`. *(Tested & Verified)*
+- [x] *Done when:* a seeded duplicate invoice produces a finding. *(Tested & Verified - Live invoice INV-1042-DUP triggered critical duplicate_invoice finding)*
 
 **Day 5: Agent and RAG**
 

@@ -28,7 +28,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">AuditFlow AI <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/30">Day 3 MVP</span></h1>
+          <h1 class="text-xl font-bold tracking-tight">AuditFlow AI <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/30">Day 4 MVP</span></h1>
           <p class="text-xs text-slate-400">AP Audit & Fraud Detection Live Pipeline Tester</p>
         </div>
       </div>
@@ -112,6 +112,17 @@ HTML_CONTENT = """<!DOCTYPE html>
           </button>
         </div>
 
+        <!-- Seed Duplicate Demo Button -->
+        <div class="card p-5 space-y-3 border-amber-500/30 bg-amber-950/20">
+          <h3 class="text-xs font-semibold uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation"></i> Seed Test Duplicate
+          </h3>
+          <p class="text-xs text-slate-400">Uploads an intentional duplicate invoice to trigger the rules engine live.</p>
+          <button onclick="seedTestDuplicateInvoice()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-medium transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-clone"></i> Ingest Seeded Duplicate Invoice
+          </button>
+        </div>
+
         <!-- Document Chunks Preview Modal/Panel -->
         <div id="chunksCard" class="card p-5 space-y-3 hidden">
           <div class="flex items-center justify-between">
@@ -126,10 +137,10 @@ HTML_CONTENT = """<!DOCTYPE html>
 
       </div>
 
-      <!-- Column 2 & 3: Document Ingest, Live Queue & Extracted Invoices -->
+      <!-- Column 2 & 3: Main Ingest, Queue, Findings & Audit Logs -->
       <div class="lg:col-span-2 space-y-6">
 
-        <!-- Document Upload Card (Day 2 & 3) -->
+        <!-- Document Upload Card -->
         <div class="card p-6 space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="text-base font-semibold text-white flex items-center gap-2">
@@ -165,6 +176,45 @@ HTML_CONTENT = """<!DOCTYPE html>
           <button onclick="handleUpload()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
             <i class="fa-solid fa-cloud-arrow-up"></i> Upload & Enqueue (202 Accepted)
           </button>
+        </div>
+
+        <!-- Audit Findings Table (Day 4) -->
+        <div class="card p-6 space-y-4 border-rose-500/20">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Audit Findings (Rules Engine)
+              </h2>
+              <span id="findingsCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">0</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="findingsFilterStatus" onchange="loadFindings()" class="input-box text-xs py-1">
+                <option value="">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="dismissed">Dismissed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800/60 uppercase text-[10px] text-slate-400 tracking-wider">
+                <tr>
+                  <th class="py-2.5 px-3">Rule</th>
+                  <th class="py-2.5 px-3">Severity</th>
+                  <th class="py-2.5 px-3">Reason</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="findingsTableBody" class="divide-y divide-slate-800">
+                <tr>
+                  <td colspan="5" class="py-6 text-center text-slate-500">Sign in to view audit findings</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Live Queue & Document History -->
@@ -207,12 +257,12 @@ HTML_CONTENT = """<!DOCTYPE html>
           </div>
         </div>
 
-        <!-- Extracted Invoices Table (Day 3) -->
+        <!-- Extracted Invoices Table -->
         <div class="card p-6 space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <h2 class="text-base font-semibold text-white flex items-center gap-2">
-                <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i> Extracted Invoices (RAG Parser)
+                <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i> Extracted Invoices
               </h2>
               <span id="invoiceCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">0</span>
             </div>
@@ -232,6 +282,36 @@ HTML_CONTENT = """<!DOCTYPE html>
               <tbody id="invoicesTableBody" class="divide-y divide-slate-800">
                 <tr>
                   <td colspan="5" class="py-6 text-center text-slate-500">No invoices extracted yet</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Append-Only Audit Log Trail (Day 4) -->
+        <div class="card p-6 space-y-4 border-slate-700">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                <i class="fa-solid fa-fingerprint text-indigo-400"></i> Immutable Audit Trail
+              </h2>
+              <span id="auditCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">0</span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800/60 uppercase text-[10px] text-slate-400 tracking-wider">
+                <tr>
+                  <th class="py-2.5 px-3">Action</th>
+                  <th class="py-2.5 px-3">Entity</th>
+                  <th class="py-2.5 px-3">Entity ID</th>
+                  <th class="py-2.5 px-3">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody" class="divide-y divide-slate-800">
+                <tr>
+                  <td colspan="4" class="py-6 text-center text-slate-500">No audit actions recorded yet</td>
                 </tr>
               </tbody>
             </table>
@@ -372,8 +452,12 @@ HTML_CONTENT = """<!DOCTYPE html>
       updateAuthUI();
       document.getElementById("documentsTableBody").innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">Sign in to view your documents</td></tr>`;
       document.getElementById("invoicesTableBody").innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">No invoices extracted yet</td></tr>`;
+      document.getElementById("findingsTableBody").innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">Sign in to view audit findings</td></tr>`;
+      document.getElementById("auditTableBody").innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">No audit actions recorded yet</td></tr>`;
       document.getElementById("docCountBadge").textContent = "0";
       document.getElementById("invoiceCountBadge").textContent = "0";
+      document.getElementById("findingsCountBadge").textContent = "0";
+      document.getElementById("auditCountBadge").textContent = "0";
       closeChunksPanel();
     }
 
@@ -456,9 +540,38 @@ HTML_CONTENT = """<!DOCTYPE html>
       }
     }
 
+    async function seedTestDuplicateInvoice() {
+      if (!token) return alert("Please authenticate first.");
+      const csvData = "vendor,invoice_number,date,amount,gstin\\nSharma Traders,INV-1042-SEED,2026-08-12,118000.00,07AAAAA0000A1Z5";
+      const blob = new Blob([csvData], { type: "text/csv" });
+      const file = new File([blob], "invoice_seeded_dup.csv", { type: "text/csv" });
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("doc_type", "invoice");
+
+      try {
+        const res = await fetch("/documents", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}` },
+          body: formData
+        });
+        const data = await res.json();
+        logResponse(res.status, data);
+        if (res.ok) {
+          alert("Seeded duplicate invoice enqueued! The rules engine will flag it.");
+          setTimeout(refreshData, 1500);
+        }
+      } catch (err) {
+        alert("Seed failed: " + err);
+      }
+    }
+
     async function refreshData() {
       await loadDocuments();
       await loadInvoices();
+      await loadFindings();
+      await loadAuditLogs();
     }
 
     async function loadDocuments() {
@@ -530,6 +643,118 @@ HTML_CONTENT = """<!DOCTYPE html>
         `).join("");
       } catch (err) {
         console.error("Failed to load invoices", err);
+      }
+    }
+
+    async function loadFindings() {
+      if (!token) return;
+      const statusFilter = document.getElementById("findingsFilterStatus").value;
+      let url = "/findings";
+      if (statusFilter) url += `?status=${statusFilter}`;
+
+      try {
+        const res = await fetch(url, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const findings = await res.json();
+        document.getElementById("findingsCountBadge").textContent = findings.length;
+
+        const tbody = document.getElementById("findingsTableBody");
+        if (findings.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">No findings reported for this filter.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = findings.map(f => {
+          let sevColor = "bg-slate-700 text-slate-300";
+          if (f.severity === "critical") sevColor = "bg-rose-600/30 text-rose-300 border border-rose-500/40 font-bold";
+          else if (f.severity === "high") sevColor = "bg-orange-500/20 text-orange-300 border border-orange-500/30";
+          else if (f.severity === "medium") sevColor = "bg-amber-500/20 text-amber-300 border border-amber-500/30";
+
+          let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] uppercase font-semibold bg-slate-800 text-slate-300 border border-slate-700">${f.status}</span>`;
+          if (f.status === "open") statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] uppercase font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">OPEN</span>`;
+          else if (f.status === "confirmed") statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] uppercase font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">CONFIRMED</span>`;
+          else if (f.status === "dismissed") statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] uppercase font-semibold bg-slate-700 text-slate-400">DISMISSED</span>`;
+
+          const actions = f.status === "open" ? `
+            <div class="flex items-center gap-1.5">
+              <button onclick="updateFinding('${f.id}', 'confirmed')" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-medium transition" title="Confirm Finding">
+                Confirm
+              </button>
+              <button onclick="updateFinding('${f.id}', 'dismissed')" class="px-2 py-0.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[10px] font-medium transition" title="Dismiss Finding">
+                Dismiss
+              </button>
+            </div>
+          ` : `<span class="text-[10px] text-slate-500 italic">Resolved</span>`;
+
+          return `
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-2.5 px-3 font-mono font-medium text-indigo-300">${escapeHtml(f.rule)}</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] uppercase ${sevColor}">${f.severity}</span></td>
+              <td class="py-2.5 px-3 text-slate-200 max-w-xs text-xs">${escapeHtml(f.reason)}</td>
+              <td class="py-2.5 px-3">${statusBadge}</td>
+              <td class="py-2.5 px-3">${actions}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        console.error("Failed to load findings", err);
+      }
+    }
+
+    async function updateFinding(findingId, newStatus) {
+      if (!token) return;
+      const notes = prompt(`Enter notes for marking finding as ${newStatus}:`, `Verified by auditor on ${new Date().toLocaleDateString()}`);
+      if (notes === null) return;
+
+      try {
+        const res = await fetch(`/findings/${findingId}`, {
+          method: "PATCH",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ status: newStatus, notes: notes })
+        });
+        const data = await res.json();
+        logResponse(res.status, data);
+        if (res.ok) {
+          refreshData();
+        } else {
+          alert(data.detail || "Update failed.");
+        }
+      } catch (err) {
+        alert("Action error: " + err);
+      }
+    }
+
+    async function loadAuditLogs() {
+      if (!token) return;
+      try {
+        const res = await fetch("/audit-logs", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const logs = await res.json();
+        document.getElementById("auditCountBadge").textContent = logs.length;
+
+        const tbody = document.getElementById("auditTableBody");
+        if (logs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">No audit actions recorded yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = logs.map(l => `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2 px-3 font-mono font-medium text-emerald-400">${escapeHtml(l.action)}</td>
+            <td class="py-2 px-3 uppercase text-[10px] text-slate-400">${escapeHtml(l.entity)}</td>
+            <td class="py-2 px-3 font-mono text-[10px] text-slate-500" title="${l.entity_id}">${l.entity_id.substring(0, 8)}...</td>
+            <td class="py-2 px-3 text-slate-400 text-[11px]">${new Date(l.created_at).toLocaleTimeString()}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        console.error("Failed to load audit logs", err);
       }
     }
 

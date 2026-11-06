@@ -13,3 +13,4 @@ class ChunkRead(BaseModel):
     page: int | None = None
     text: str
     created_at: datetime
+

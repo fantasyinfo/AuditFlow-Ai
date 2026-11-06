@@ -184,3 +184,4 @@ def parse_document(filename: str, content: bytes) -> ParsedDocument:
         # Fallback raw text representation
         txt = content.decode("utf-8", errors="replace")
         return ParsedDocument(full_text=txt, pages=[(1, txt)], extracted_invoice=None)
+

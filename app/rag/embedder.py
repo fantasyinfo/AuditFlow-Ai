@@ -85,3 +85,4 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
 def embed_query(text: str) -> list[float]:
     return default_embedder.embed_query(text)
+

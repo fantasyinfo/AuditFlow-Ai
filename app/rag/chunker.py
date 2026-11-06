@@ -59,3 +59,4 @@ default_chunker = DocumentChunker()
 
 def chunk_document(parsed_doc: ParsedDocument) -> list[DocumentChunkItem]:
     return default_chunker.chunk_document(parsed_doc)
+

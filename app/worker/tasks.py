@@ -63,7 +63,7 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
             )
             session.add(chunk_row)
 
-        # Step 7: Persist extracted invoice if found
+        # Step 7: Persist extracted invoice and evaluate audit rules
         if parsed.extracted_invoice:
             inv = parsed.extracted_invoice
             existing_invoice = session.query(Invoice).filter(
@@ -72,6 +72,7 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
                 Invoice.invoice_number == inv.invoice_number,
             ).first()
 
+            target_invoice = existing_invoice
             if not existing_invoice:
                 invoice_row = Invoice(
                     tenant_id=tenant_uuid,
@@ -83,6 +84,8 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
                     total_amount=inv.total_amount,
                 )
                 session.add(invoice_row)
+                session.flush()
+                target_invoice = invoice_row
                 logger.info(
                     "Invoice record extracted and saved",
                     vendor=inv.vendor_name,
@@ -90,6 +93,16 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
                     amount=str(inv.total_amount),
                     tenant_id=tenant_id,
                 )
+
+            # Evaluate audit detection rules
+            from app.rules.run_rules import run_all_rules
+            findings = run_all_rules(target_invoice, session)
+            logger.info(
+                "Audit rules evaluated",
+                findings_count=len(findings),
+                invoice_id=str(target_invoice.id),
+                tenant_id=tenant_id,
+            )
 
         # Step 8: Mark document processing complete
         doc.status = DocumentStatus.DONE.value

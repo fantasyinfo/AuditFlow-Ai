@@ -58,3 +58,4 @@ def downgrade() -> None:
     op.drop_index("ix_chunks_tenant_document", table_name="document_chunks")
     op.drop_index("ix_chunks_tenant_created", table_name="document_chunks")
     op.drop_table("document_chunks")
+

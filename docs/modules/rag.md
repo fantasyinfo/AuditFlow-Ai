@@ -60,3 +60,4 @@ Visit `http://localhost:8000/ui` to upload invoices, view the extracted invoices
 ## 6. Known Limits
 - Regex extraction targets standard invoice patterns; complex multi-column or scanned invoices will be upgraded with OCR and LLM-assisted extraction in Phase 2.
 - Vector dimension is currently locked to 1536 (`text-embedding-3-small`). Changing embedding models requires an Alembic schema update.
+
