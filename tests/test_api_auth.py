@@ -1,10 +1,14 @@
 import unittest
 import uuid
 from httpx import ASGITransport, AsyncClient
+from app.database import async_engine
 from app.main import app
 
 
 class TestAuthAPI(unittest.IsolatedAsyncioTestCase):
+    async def asyncTearDown(self):
+        await async_engine.dispose()
+
     async def test_complete_auth_and_multitenancy_flow(self):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"

@@ -19,6 +19,9 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
 )
 
+# Register worker tasks
+import app.worker.tasks  # noqa: F401, E402
+
 
 @celery_app.task(name="app.worker.tasks.ping")
 def ping_task() -> str:

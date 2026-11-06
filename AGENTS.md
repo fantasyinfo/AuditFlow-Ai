@@ -87,3 +87,11 @@ Models & Schemas (app/models/ & app/schemas/) -> SQLAlchemy 2.0 models & Pydanti
 - **Unit Tests for Rules:** Every rule in `app/rules/` must have automated unit tests covering both positive (finding generated) and negative (valid invoice passes) scenarios.
 - **Multi-Tenant Isolation Tests:** Every new endpoint must have a test verifying that Tenant B cannot access Tenant A's documents, invoices, or findings.
 
+---
+
+## 8. Progress Tracking & Web Testing UI
+
+- **Checklist Verification:** Keep `AuditFlow AI MVP Project Plan.md` updated after each milestone. Explicitly mark completed and verified deliverables with `[x] (tested & verified)`.
+- **Web Testing Dashboard:** Maintain a lightweight, self-contained web testing UI served directly by FastAPI (e.g. at `/ui` or `/dashboard`). As each phase is built (Auth, Documents, Invoices, Findings, Agent), update the UI so the user can interactively test the entire flow in the browser without needing cURL or Postman.
+
+

@@ -5,7 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.routes.auth import router as auth_router
+from app.routes.documents import router as documents_router
 from app.routes.health import router as health_router
+from app.routes.ui import router as ui_router
 
 settings = get_settings()
 
@@ -36,9 +38,15 @@ app.add_middleware(
 # Include core routers
 app.include_router(health_router)
 app.include_router(auth_router)
+app.include_router(documents_router)
+app.include_router(ui_router)
 
 
 @app.get("/", include_in_schema=False)
 async def root() -> dict[str, str]:
-    return {"message": "AuditFlow AI API is running", "docs": "/docs"}
+    return {
+        "message": "AuditFlow AI API is running",
+        "docs": "/docs",
+        "testing_ui": "/ui",
+    }
 

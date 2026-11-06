@@ -418,24 +418,25 @@ Indexes on `(tenant_id, created_at)` for every table, a unique index on `(tenant
 
 ### Phase 1: MVP (Days 1 to 7). Goal: it works end to end.
 
-**Day 1: Skeleton, database, auth**
+**Day 1: Skeleton, database, auth** - [x] *(Tested & Verified)*
 
-- Create repo and the folder structure above.
-- Add `requirements.txt`, Dockerfile, docker-compose, `.env.example`.
-- Build image once, fix any version conflict, create `requirements.lock`.
-- `config.py`, `database.py`, `/health`.
-- Models for tenants and users, first Alembic migration.
-- `/auth/register`, `/auth/login`, JWT, `get_current_user` dependency.
-- *Done when:* `docker compose up` starts everything and you can register and log in.
+- [x] Create repo and the folder structure above. *(Tested & Verified)*
+- [x] Add `requirements.txt`, Dockerfile, docker-compose, `.env.example`. *(Tested & Verified)*
+- [x] Build image once, fix any version conflict, create `requirements.lock`. *(Tested & Verified - redis==6.1.0, email-validator==2.2.0)*
+- [x] `config.py`, `database.py`, `/health`. *(Tested & Verified)*
+- [x] Models for tenants and users, first Alembic migration. *(Tested & Verified)*
+- [x] `/auth/register`, `/auth/login`, JWT, `get_current_user` dependency. *(Tested & Verified)*
+- [x] *Done when:* `docker compose up` starts everything and you can register and log in. *(Tested & Verified - All 5 tests passing)*
 
-**Day 2: Documents and queue**
+**Day 2: Documents and queue** - [x] *(Tested & Verified)*
 
-- Models: documents, invoices, purchase\_orders.
-- `POST /documents`: validate type and size, save file, insert row, enqueue Celery task, return 202.
-- `Idempotency-Key` handling.
-- `GET /documents/{id}` status.
-- Worker task that only flips status to `done` (proves the queue works).
-- *Done when:* upload returns instantly and the worker log shows the job processed.
+- [x] Models: documents, invoices, purchase_orders, idempotency_keys. *(Tested & Verified)*
+- [x] `POST /documents`: validate type and size, save file, insert row, enqueue Celery task, return 202. *(Tested & Verified)*
+- [x] `Idempotency-Key` handling. *(Tested & Verified - replay returns cached 202 with X-Cache-Lookup: HIT)*
+- [x] `GET /documents/{id}` status & multi-tenant isolation. *(Tested & Verified)*
+- [x] Worker task that flips status from queued -> processing -> done. *(Tested & Verified via Celery logs)*
+- [x] Self-contained Web Testing UI at `/ui` and `/dashboard` for browser verification. *(Tested & Verified)*
+- [x] *Done when:* upload returns instantly and the worker log shows the job processed. *(Tested & Verified)*
 
 **Day 3: Parsing and embeddings**
 
