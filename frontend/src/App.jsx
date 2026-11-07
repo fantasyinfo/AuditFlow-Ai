@@ -8,6 +8,7 @@ import InvoicesModule from "./modules/invoices/InvoicesModule";
 import FindingsModule from "./modules/findings/FindingsModule";
 import AssistantModule from "./modules/assistant/AssistantModule";
 import AuditLogsModule from "./modules/audit-logs/AuditLogsModule";
+import DocsModule from "./modules/docs/DocsModule";
 
 const MODULE_TITLES = {
   dashboard: "Executive AP Overview & Risk Dashboard",
@@ -16,6 +17,7 @@ const MODULE_TITLES = {
   findings: "Audit Findings & Fraud Investigation",
   assistant: "AI Audit Assistant (Google AI Studio Gemini + RAG)",
   "audit-logs": "Immutable Compliance & Operations Trail",
+  docs: "AuditFlow Platform Guide & Documentation",
 };
 
 export default function App() {
@@ -24,7 +26,7 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-slate-950 flex flex-col items-center justify-center gap-3 text-slate-400">
+      <div className="h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3 text-slate-500 dark:text-slate-400">
         <div className="w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
         <span className="text-xs font-mono">Initializing AuditFlow Admin Center...</span>
       </div>
@@ -49,6 +51,8 @@ export default function App() {
         return <AssistantModule />;
       case "audit-logs":
         return <AuditLogsModule />;
+      case "docs":
+        return <DocsModule onNavigate={setCurrentModule} />;
       default:
         return <DashboardModule onNavigate={setCurrentModule} />;
     }

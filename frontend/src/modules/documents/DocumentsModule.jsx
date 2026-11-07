@@ -113,14 +113,14 @@ export default function DocumentsModule() {
   return (
     <div className="space-y-6">
       {/* Upload Zone */}
-      <div className="rounded-xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+      <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-              <UploadCloud className="w-5 h-5 text-brand-400" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <UploadCloud className="w-5 h-5 text-brand-600 dark:text-brand-400" />
               <span>Universal Commercial Document Ingestion</span>
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Upload invoices, quotations, contracts, or POs (PDF / CSV) in arbitrary global formats.
             </p>
           </div>
@@ -128,10 +128,10 @@ export default function DocumentsModule() {
           <button
             onClick={seedDuplicateInvoice}
             disabled={isUploading}
-            className="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
             title="Seed duplicate invoice to trigger duplicate_invoice finding"
           >
-            <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+            <AlertCircle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             <span>Seed Test Duplicate</span>
           </button>
         </div>
@@ -140,26 +140,26 @@ export default function DocumentsModule() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* File Input */}
             <div className="md:col-span-2 space-y-1">
-              <label className="block text-xs font-medium text-slate-400">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 Select File (PDF or CSV, max 10MB)
               </label>
               <input
                 type="file"
                 accept=".pdf,.csv"
                 onChange={(e) => setSelectedFile(e.target.files[0])}
-                className="w-full text-xs text-slate-400 bg-slate-950 border border-slate-800 rounded-lg file:mr-4 file:py-2.5 file:px-4 file:rounded-l-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer"
+                className="w-full text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg file:mr-4 file:py-2.5 file:px-4 file:rounded-l-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-600 file:text-white hover:file:bg-brand-500 cursor-pointer"
               />
             </div>
 
             {/* Document Category */}
             <div className="space-y-1">
-              <label className="block text-xs font-medium text-slate-400">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 Document Category
               </label>
               <select
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 px-3 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-brand-500"
               >
                 <option value="invoice">Invoice (Global / Any Layout)</option>
                 <option value="quotation">Quotation / Price Estimate</option>
@@ -174,14 +174,14 @@ export default function DocumentsModule() {
           <div className="flex items-center gap-3">
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] text-slate-400 flex items-center gap-1">
-                  <Key className="w-3 h-3 text-slate-500" />
+                <label className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                  <Key className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                   <span>Idempotency-Key (Optional Header)</span>
                 </label>
                 <button
                   type="button"
                   onClick={generateKey}
-                  className="text-[10px] text-brand-400 hover:underline"
+                  className="text-[10px] text-brand-600 dark:text-brand-400 hover:underline"
                 >
                   Generate New
                 </button>
@@ -191,7 +191,7 @@ export default function DocumentsModule() {
                 value={idempotencyKey}
                 onChange={(e) => setIdempotencyKey(e.target.value)}
                 placeholder="Unique client key e.g. req_8a72b"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg py-1.5 px-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-brand-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg py-1.5 px-3 text-xs text-slate-900 dark:text-slate-200 font-mono focus:outline-none focus:border-brand-500"
               />
             </div>
 
@@ -220,14 +220,14 @@ export default function DocumentsModule() {
             <div
               className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
                 uploadMessage.type === "success"
-                  ? "bg-emerald-950/40 text-emerald-300 border border-emerald-800/60"
-                  : "bg-rose-950/40 text-rose-300 border border-rose-800/60"
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
+                  : "bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60"
               }`}
             >
               {uploadMessage.type === "success" ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
               ) : (
-                <AlertCircle className="w-4 h-4 shrink-0" />
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
               )}
               <span>{uploadMessage.text}</span>
             </div>
@@ -236,17 +236,17 @@ export default function DocumentsModule() {
       </div>
 
       {/* Documents Queue Table */}
-      <div className="rounded-xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+      <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-brand-400" />
-            <h3 className="text-sm font-semibold text-slate-200">
+            <Clock className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-200">
               Document Processing Queue ({documents.length})
             </h3>
           </div>
           <button
             onClick={fetchDocuments}
-            className="p-1.5 text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition"
+            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             title="Refresh"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -254,8 +254,8 @@ export default function DocumentsModule() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/60 uppercase text-[10px] text-slate-400 font-semibold tracking-wider">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-50 dark:bg-slate-950/60 uppercase text-[10px] text-slate-500 dark:text-slate-400 font-semibold tracking-wider border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="py-2.5 px-3">Filename</th>
                 <th className="py-2.5 px-3">Category</th>
@@ -264,47 +264,47 @@ export default function DocumentsModule() {
                 <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {documents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500 text-xs">
+                  <td colSpan={5} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                     No documents ingested yet. Upload an invoice or agreement above.
                   </td>
                 </tr>
               ) : (
                 documents.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-800/30 transition">
-                    <td className="py-2.5 px-3 font-medium text-slate-200 flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                  <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                    <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-slate-200 flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
                       <span className="truncate max-w-xs">{d.filename}</span>
                     </td>
-                    <td className="py-2.5 px-3 uppercase text-[10px] text-slate-400 font-mono">
+                    <td className="py-2.5 px-3 uppercase text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                       {d.type}
                     </td>
                     <td className="py-2.5 px-3">
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded font-mono font-semibold ${
                           d.status === "done"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
                             : d.status === "processing"
-                            ? "bg-brand-500/20 text-brand-300 border border-brand-500/30 animate-pulse"
+                            ? "bg-brand-500/20 text-brand-700 dark:text-brand-300 border border-brand-500/30 animate-pulse"
                             : d.status === "failed"
-                            ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                            : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                            ? "bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30"
+                            : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
                         }`}
                       >
                         {d.status}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-[11px] text-slate-400">
+                    <td className="py-2.5 px-3 text-[11px] text-slate-500 dark:text-slate-400">
                       {new Date(d.created_at).toLocaleTimeString()}
                     </td>
                     <td className="py-2.5 px-3 text-right">
                       <button
                         onClick={() => openChunksModal(d)}
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-brand-900/40 text-brand-300 border border-slate-700 rounded text-[11px] font-medium transition inline-flex items-center gap-1.5"
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-300 border border-slate-200 dark:border-slate-700 rounded text-[11px] font-medium transition inline-flex items-center gap-1.5"
                       >
-                        <Layers className="w-3 h-3 text-brand-400" />
+                        <Layers className="w-3 h-3 text-brand-600 dark:text-brand-400" />
                         <span>Inspect Chunks</span>
                       </button>
                     </td>
@@ -318,24 +318,24 @@ export default function DocumentsModule() {
 
       {/* Chunks & Vector Inspector Modal */}
       {inspectDoc && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
             {/* Modal Header */}
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Database className="w-5 h-5 text-brand-400" />
+                <Database className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <div>
-                  <h3 className="text-sm font-bold text-slate-100">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     Document Chunks & pgvector Index
                   </h3>
-                  <p className="text-[11px] text-slate-400 font-mono">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                     {inspectDoc.filename} • {chunks.length} Chunks
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setInspectDoc(null)}
-                className="p-1 rounded text-slate-400 hover:text-white"
+                className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -345,33 +345,33 @@ export default function DocumentsModule() {
             <div className="p-5 overflow-y-auto space-y-3 flex-1">
               {isLoadingChunks ? (
                 <div className="py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-                  <RefreshCw className="w-4 h-4 animate-spin text-brand-400" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-brand-500" />
                   <span>Loading pgvector chunks...</span>
                 </div>
               ) : chunks.length === 0 ? (
-                <div className="py-12 text-center text-slate-500 text-xs">
+                <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
                   No chunks generated yet. Document is still being processed by Celery worker.
                 </div>
               ) : (
                 chunks.map((c) => (
                   <div
                     key={c.id}
-                    className="p-3.5 rounded-lg bg-slate-950 border border-slate-800/80 space-y-2 text-xs"
+                    className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 space-y-2 text-xs"
                   >
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
-                      <span className="font-mono text-brand-400 font-semibold">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="font-mono text-brand-600 dark:text-brand-400 font-semibold">
                         Chunk #{c.chunk_index}
                       </span>
                       <div className="flex items-center gap-2 font-mono text-[10px]">
-                        <span className="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">
+                        <span className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300">
                           Page {c.page || 1}
                         </span>
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                        <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">
                           pgvector 1536d
                         </span>
                       </div>
                     </div>
-                    <p className="text-slate-300 leading-relaxed font-mono text-[11px] bg-slate-900/60 p-2.5 rounded border border-slate-800/60 break-words whitespace-pre-wrap">
+                    <p className="text-slate-800 dark:text-slate-300 leading-relaxed font-mono text-[11px] bg-white dark:bg-slate-900/60 p-2.5 rounded border border-slate-200 dark:border-slate-800/60 break-words whitespace-pre-wrap">
                       {c.text}
                     </p>
                   </div>
@@ -380,10 +380,10 @@ export default function DocumentsModule() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-800 flex justify-end">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => setInspectDoc(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition"
               >
                 Close Inspector
               </button>
