@@ -28,10 +28,19 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60
 
-    # LLM Settings
-    LLM_BASE_URL: str = "https://api.groq.com/openai/v1"
+    # LLM Settings (Defaults to Google AI Studio Gemini API)
+    LLM_PROVIDER: str = "google"
+    GEMINI_API_KEY: str = ""
+    LLM_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
     LLM_API_KEY: str = "mock_key"
-    LLM_MODEL: str = "llama-3.3-70b-versatile"
+    LLM_MODEL: str = "gemini-2.0-flash"
+
+    @property
+    def effective_llm_api_key(self) -> str:
+        """Returns GEMINI_API_KEY if populated, otherwise LLM_API_KEY."""
+        if self.GEMINI_API_KEY and self.GEMINI_API_KEY.strip() not in ("mock_key", "your_key_here", ""):
+            return self.GEMINI_API_KEY.strip()
+        return self.LLM_API_KEY.strip()
 
     # Vector Embeddings
     EMBEDDING_BASE_URL: str = "https://api.openai.com/v1"

@@ -457,14 +457,16 @@ Indexes on `(tenant_id, created_at)` for every table, a unique index on `(tenant
 - [x] Web Testing Dashboard: Findings review & audit log timeline at `/ui`. *(Tested & Verified)*
 - [x] *Done when:* a seeded duplicate invoice produces a finding. *(Tested & Verified - Live invoice INV-1042-DUP triggered critical duplicate_invoice finding)*
 
-**Day 5: Agent and RAG**
+**Day 5: Agent and RAG** - [x] *(Tested & Verified)*
 
-- `rag/retriever.py`: vector search filtered by `tenant_id`, top 5 chunks.
-- `agent/tools.py`: `search_documents`, `list_findings`, `get_invoice`.
-- `agent/agent_runner.py`: LangChain agent using tool calling, system prompt that requires citations and says "I could not find this in your documents" when sources are empty.
-- `POST /agent/ask` with timeout and `max_tokens`.
-- `tests/eval/golden_questions.json` with 10 questions and expected sources.
-- *Done when:* the agent answers a duplicate question and cites the right finding.
+- [x] `rag/retriever.py`: vector search filtered by `tenant_id`, top 5 chunks with pgvector cosine distance `<=>`. *(Tested & Verified)*
+- [x] `agent/tools.py`: strictly read-only LangChain tools `search_documents`, `list_findings`, `get_invoice` scoped by `tenant_id`. *(Tested & Verified)*
+- [x] `agent/agent_runner.py`: LangChain tool-calling agent with Google AI Studio (Gemini) support, mandatory citations `[filename.pdf p.X]` and `[finding #ID]`, and strict refusal phrase *"I could not find this in your documents."* *(Tested & Verified)*
+- [x] `POST /agent/ask` with 25s timeout and `max_tokens` limits. *(Tested & Verified)*
+- [x] `tests/eval/golden_questions.json` with 10 golden evaluation questions covering findings, citations, refusals, and mutation safety. *(Tested & Verified - 100% passing)*
+- [x] Web Testing Dashboard: Interactive "AI Audit Assistant" chat widget at `/ui` with citation pills and refusal badges. *(Tested & Verified)*
+- [x] Universal Document & Flexible Markup Support: Google AI Studio Gemini entity extraction and global heuristic fallback for any invoice, quotation, or agreement layout. *(Tested & Verified)*
+- [x] *Done when:* the agent answers a duplicate question and cites the right finding. *(Tested & Verified)*
 
 **Day 6: Hardening and load test**
 

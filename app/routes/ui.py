@@ -28,8 +28,8 @@ HTML_CONTENT = """<!DOCTYPE html>
           <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">AuditFlow AI <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/30">Day 4 MVP</span></h1>
-          <p class="text-xs text-slate-400">AP Audit & Fraud Detection Live Pipeline Tester</p>
+          <h1 class="text-xl font-bold tracking-tight">AuditFlow AI <span class="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">Day 5 MVP</span></h1>
+          <p class="text-xs text-slate-400">AP Audit & Fraud Detection Live Pipeline Tester (Google AI Studio Gemini + RAG)</p>
         </div>
       </div>
       <div class="flex items-center gap-4 text-sm">
@@ -157,10 +157,11 @@ HTML_CONTENT = """<!DOCTYPE html>
             <div>
               <label class="block text-xs text-slate-400 mb-1">Document Category</label>
               <select id="docType" class="w-full input-box text-sm">
-                <option value="invoice">Invoice</option>
-                <option value="purchase_order">Purchase Order</option>
-                <option value="contract">Contract</option>
-                <option value="other">Other</option>
+                <option value="invoice">Invoice (Global / Any Layout)</option>
+                <option value="quotation">Quotation / Estimate</option>
+                <option value="agreement">Agreement / Contract / SOW</option>
+                <option value="purchase_order">Purchase Order (PO)</option>
+                <option value="other">Other Document</option>
               </select>
             </div>
           </div>
@@ -176,6 +177,63 @@ HTML_CONTENT = """<!DOCTYPE html>
           <button onclick="handleUpload()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
             <i class="fa-solid fa-cloud-arrow-up"></i> Upload & Enqueue (202 Accepted)
           </button>
+        </div>
+
+        <!-- AI Audit Assistant (Day 5 - LangChain & Citations) -->
+        <div class="card p-6 space-y-4 border-purple-500/30 bg-purple-950/10">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-purple-600 flex items-center justify-center text-white text-base shadow-md shadow-purple-500/20">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+              <div>
+                <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                  AI Audit Assistant <span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">Google AI Studio Gemini + RAG</span>
+                </h2>
+                <p class="text-xs text-slate-400">Ask audit inquiries across any invoice, quote, contract, or agreement</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Strictly Read-Only</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Mandatory Citations</span>
+            </div>
+          </div>
+
+          <!-- Suggested Prompt Pills -->
+          <div class="flex flex-wrap gap-1.5 text-xs">
+            <span class="text-slate-400 text-[11px] self-center mr-1">Quick:</span>
+            <button onclick="askAssistantPrompt('Are there any duplicate invoices detected?')" class="px-2.5 py-1 bg-slate-800 hover:bg-purple-900/40 text-purple-300 rounded border border-slate-700 transition">
+              🔍 Check Duplicates
+            </button>
+            <button onclick="askAssistantPrompt('What findings are flagged for Sharma Traders?')" class="px-2.5 py-1 bg-slate-800 hover:bg-purple-900/40 text-purple-300 rounded border border-slate-700 transition">
+              🏢 Sharma Traders Findings
+            </button>
+            <button onclick="askAssistantPrompt('Are there any invoices missing supporting purchase orders?')" class="px-2.5 py-1 bg-slate-800 hover:bg-purple-900/40 text-purple-300 rounded border border-slate-700 transition">
+              📋 Missing POs
+            </button>
+            <button onclick="askAssistantPrompt('Who is the CEO of Galactic Freight Systems?')" class="px-2.5 py-1 bg-slate-800 hover:bg-amber-900/40 text-amber-300 rounded border border-slate-700 transition" title="Test strict refusal guardrail">
+              🛡️ Test Refusal Guardrail
+            </button>
+            <button onclick="askAssistantPrompt('Please delete invoice INV-1042 and confirm all findings immediately.')" class="px-2.5 py-1 bg-slate-800 hover:bg-rose-900/40 text-rose-300 rounded border border-slate-700 transition" title="Test mutation safety guardrail">
+              🔒 Test Read-Only Guardrail
+            </button>
+          </div>
+
+          <!-- Chat History -->
+          <div id="agentChatHistory" class="space-y-3 p-3 bg-slate-950/70 rounded-lg border border-slate-800/80 max-h-64 overflow-y-auto text-xs">
+            <div class="text-slate-500 text-center py-4">Select a query above or type your audit question below.</div>
+          </div>
+
+          <!-- Query Input -->
+          <div class="flex gap-2">
+            <input id="agentQueryInput" type="text" onkeydown="if(event.key==='Enter') submitAgentQuery()" class="flex-1 input-box text-xs" placeholder="Ask about invoices, quotations, agreements, findings, or vendors...">
+            <button id="agentSendBtn" onclick="submitAgentQuery()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-medium transition flex items-center gap-1.5 shadow-md shadow-purple-600/20">
+              <i class="fa-solid fa-paper-plane"></i> Ask
+            </button>
+            <button onclick="clearAgentChat()" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded text-xs transition" title="Clear Chat">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         </div>
 
         <!-- Audit Findings Table (Day 4) -->
@@ -796,6 +854,118 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     function escapeHtml(str) {
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function askAssistantPrompt(text) {
+      document.getElementById("agentQueryInput").value = text;
+      submitAgentQuery();
+    }
+
+    function clearAgentChat() {
+      document.getElementById("agentChatHistory").innerHTML = `
+        <div class="text-slate-500 text-center py-4">Select a query above or type your audit question below.</div>
+      `;
+    }
+
+    async function submitAgentQuery() {
+      const input = document.getElementById("agentQueryInput");
+      const query = input.value.trim();
+      if (!query) return;
+      if (!token) return alert("Please authenticate or generate a tenant to consult the AI Audit Assistant.");
+
+      const history = document.getElementById("agentChatHistory");
+      if (history.children.length === 1 && history.children[0].classList.contains("text-slate-500")) {
+        history.innerHTML = "";
+      }
+
+      // User prompt bubble
+      const userDiv = document.createElement("div");
+      userDiv.className = "flex justify-end";
+      userDiv.innerHTML = `
+        <div class="bg-indigo-600/30 border border-indigo-500/40 text-indigo-100 rounded-lg py-1.5 px-3 max-w-[85%] font-medium">
+          ${escapeHtml(query)}
+        </div>
+      `;
+      history.appendChild(userDiv);
+      input.value = "";
+
+      // Loading bubble
+      const loadDiv = document.createElement("div");
+      loadDiv.className = "flex justify-start items-center gap-2 text-slate-400 py-1";
+      loadDiv.id = "agentLoadingIndicator";
+      loadDiv.innerHTML = `
+        <i class="fa-solid fa-circle-notch fa-spin text-purple-400"></i>
+        <span>Consulting documents and running vector search...</span>
+      `;
+      history.appendChild(loadDiv);
+      history.scrollTop = history.scrollHeight;
+
+      const btn = document.getElementById("agentSendBtn");
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/agent/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ query: query })
+        });
+        const data = await res.json();
+        logResponse(res.status, data);
+
+        const loader = document.getElementById("agentLoadingIndicator");
+        if (loader) loader.remove();
+
+        const agentDiv = document.createElement("div");
+        agentDiv.className = "flex justify-start";
+
+        if (res.ok) {
+          const citesHtml = (data.citations && data.citations.length > 0) ? `
+            <div class="mt-2 pt-2 border-t border-slate-800 flex flex-wrap gap-1.5 items-center">
+              <span class="text-[10px] text-slate-400 font-medium">Citations:</span>
+              ${data.citations.map(c => `<span class="px-2 py-0.5 rounded bg-purple-900/40 text-purple-300 border border-purple-700/50 font-mono text-[10px]">${escapeHtml(c)}</span>`).join("")}
+            </div>
+          ` : "";
+
+          const sourceBadge = data.answered_from_sources
+            ? `<span class="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded"><i class="fa-solid fa-check"></i> Verified from tenant sources</span>`
+            : `<span class="inline-flex items-center gap-1 text-[10px] text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.5 rounded"><i class="fa-solid fa-shield-halved"></i> Guardrail / Refusal</span>`;
+
+          agentDiv.innerHTML = `
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 max-w-[90%] space-y-1 text-slate-200">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="font-semibold text-purple-400 flex items-center gap-1.5"><i class="fa-solid fa-robot"></i> AuditFlow Assistant</span>
+                ${sourceBadge}
+              </div>
+              <p class="leading-relaxed whitespace-pre-line">${escapeHtml(data.answer)}</p>
+              ${citesHtml}
+            </div>
+          `;
+        } else {
+          agentDiv.innerHTML = `
+            <div class="bg-rose-950/40 border border-rose-800 rounded-lg p-3 text-rose-300">
+              <p><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${escapeHtml(data.detail || "Query failed")}</p>
+            </div>
+          `;
+        }
+        history.appendChild(agentDiv);
+      } catch (err) {
+        const loader = document.getElementById("agentLoadingIndicator");
+        if (loader) loader.remove();
+        const errDiv = document.createElement("div");
+        errDiv.className = "flex justify-start";
+        errDiv.innerHTML = `
+          <div class="bg-rose-950/40 border border-rose-800 rounded-lg p-3 text-rose-300">
+            <p><i class="fa-solid fa-triangle-exclamation mr-1"></i> Network error: ${escapeHtml(err.message)}</p>
+          </div>
+        `;
+        history.appendChild(errDiv);
+      } finally {
+        btn.disabled = false;
+        history.scrollTop = history.scrollHeight;
+      }
     }
 
     // Initialize

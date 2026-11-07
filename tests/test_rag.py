@@ -81,9 +81,9 @@ class TestRagPipeline(unittest.IsolatedAsyncioTestCase):
 
             # 2. Upload Invoice CSV
             csv_content = (
-                b"vendor,invoice_number,date,amount,gstin\n"
-                b"Karan Logistics,INV-5501,2026-09-01,98500.00,06AAAAA0000A1Z5\n"
-            )
+                f"vendor,invoice_number,date,amount,gstin\n"
+                f"Karan Logistics,INV-5501-{uid},2026-09-01,98500.00,06AAAAA0000A1Z5\n"
+            ).encode("utf-8")
             res_up = await client.post(
                 "/documents",
                 headers={"Authorization": f"Bearer {token}"},
@@ -124,8 +124,9 @@ class TestRagPipeline(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(res_invoices.status_code, 200)
             invoices = res_invoices.json()
-            self.assertTrue(any(i["invoice_number"] == "INV-5501" for i in invoices))
-            matched_inv = next(i for i in invoices if i["invoice_number"] == "INV-5501")
+            inv_no = f"INV-5501-{uid}"
+            self.assertTrue(any(i["invoice_number"] == inv_no for i in invoices))
+            matched_inv = next(i for i in invoices if i["invoice_number"] == inv_no)
             self.assertEqual(matched_inv["vendor_name"], "Karan Logistics")
             self.assertEqual(matched_inv["total_amount"], "98500.00")
             self.assertEqual(matched_inv["vendor_gstin"], "06AAAAA0000A1Z5")

@@ -17,6 +17,8 @@ class DocumentStatus(str, enum.Enum):
 class DocumentType(str, enum.Enum):
     INVOICE = "invoice"
     PURCHASE_ORDER = "purchase_order"
+    QUOTATION = "quotation"
+    AGREEMENT = "agreement"
     CONTRACT = "contract"
     OTHER = "other"
 

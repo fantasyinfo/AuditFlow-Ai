@@ -34,6 +34,11 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
             )
             return {"status": "not_found", "document_id": document_id}
 
+        # Idempotency check: if document already finished processing, return early
+        if doc.status == DocumentStatus.DONE.value:
+            logger.info("Document already processed, returning done", document_id=document_id)
+            return {"status": "done", "document_id": document_id, "already_done": True}
+
         # Step 1: Mark as processing
         doc.status = DocumentStatus.PROCESSING.value
         session.commit()
@@ -74,25 +79,34 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
 
             target_invoice = existing_invoice
             if not existing_invoice:
-                invoice_row = Invoice(
-                    tenant_id=tenant_uuid,
-                    document_id=doc_uuid,
-                    vendor_name=inv.vendor_name,
-                    vendor_gstin=inv.vendor_gstin,
-                    invoice_number=inv.invoice_number,
-                    invoice_date=inv.invoice_date,
-                    total_amount=inv.total_amount,
-                )
-                session.add(invoice_row)
-                session.flush()
-                target_invoice = invoice_row
-                logger.info(
-                    "Invoice record extracted and saved",
-                    vendor=inv.vendor_name,
-                    invoice_number=inv.invoice_number,
-                    amount=str(inv.total_amount),
-                    tenant_id=tenant_id,
-                )
+                try:
+                    invoice_row = Invoice(
+                        tenant_id=tenant_uuid,
+                        document_id=doc_uuid,
+                        vendor_name=inv.vendor_name,
+                        vendor_gstin=inv.vendor_gstin,
+                        invoice_number=inv.invoice_number,
+                        invoice_date=inv.invoice_date,
+                        total_amount=inv.total_amount,
+                    )
+                    session.add(invoice_row)
+                    session.flush()
+                    target_invoice = invoice_row
+                    logger.info(
+                        "Invoice record extracted and saved",
+                        vendor=inv.vendor_name,
+                        invoice_number=inv.invoice_number,
+                        amount=str(inv.total_amount),
+                        tenant_id=tenant_id,
+                    )
+                except Exception as insert_exc:
+                    session.rollback()
+                    # Re-query existing invoice
+                    target_invoice = session.query(Invoice).filter(
+                        Invoice.tenant_id == tenant_uuid,
+                        Invoice.vendor_name == inv.vendor_name,
+                        Invoice.invoice_number == inv.invoice_number,
+                    ).first()
 
             # Evaluate audit detection rules
             from app.rules.run_rules import run_all_rules
