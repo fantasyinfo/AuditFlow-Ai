@@ -98,3 +98,4 @@ export default function Navbar({ currentModuleTitle }) {
     </header>
   );
 }
+

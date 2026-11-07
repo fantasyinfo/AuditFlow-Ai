@@ -23,3 +23,4 @@ export default function AppLayout({ currentModule, onSelectModule, moduleTitle, 
     </div>
   );
 }
+

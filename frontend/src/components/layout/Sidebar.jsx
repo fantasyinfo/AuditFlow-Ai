@@ -163,3 +163,4 @@ export default function Sidebar({ currentModule, onSelectModule }) {
     </aside>
   );
 }
+

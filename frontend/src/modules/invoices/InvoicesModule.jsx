@@ -277,3 +277,4 @@ export default function InvoicesModule() {
     </div>
   );
 }
+
