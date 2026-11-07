@@ -38,6 +38,17 @@ The AuditFlow Rules Engine evaluates invoices deterministically to identify pote
 - **Criteria:** Invoice total > ₹10,000.00 and exceeds 2.5× vendor historical average (requires at least 3 historical invoices).
 - **Severity:** `medium`
 
+### 3.6 Tenant-Custom Rules (`custom_rule_evaluator`)
+- **Criteria:** Dynamic tenant-defined threshold or condition evaluated per invoice.
+- **Supported Rule Types:**
+  - `amount_threshold`: Compares `total_amount` against threshold using operators (`gt`, `gte`, `lt`, `lte`, `eq`, `neq`).
+  - `vendor_match`: Checks `vendor_name` against a pattern using `contains`, `not_contains`, `eq`, or `regex`.
+  - `missing_field`: Verifies presence of mandatory fields (`vendor_gstin`, `invoice_number`, `invoice_date`, `po_id`).
+  - `date_check`: Flags weekend invoices (`operator: "weekend"`) or future invoice dates (`operator: "future"`).
+  - `keyword_check`: Scans invoice metadata/notes for suspicious terms (e.g. "gift", "facilitation", "consulting fee").
+- **Dynamic Formatting:** Findings dynamically interpolate `{invoice_number}`, `{vendor_name}`, `{field_name}`, `{field_value}`, and `{threshold}` into custom user-configured explanation templates.
+- **Severity:** User-configurable (`low`, `medium`, `high`, `critical`).
+
 ## 4. Failure Cases
 - **No PO Found:** Handled gracefully by `missing_evidence` without raising database foreign key exceptions.
 - **Division by Zero:** Guarded in `unusual_amount` by requiring count $\ge 3$ and historical average $> 0$.
