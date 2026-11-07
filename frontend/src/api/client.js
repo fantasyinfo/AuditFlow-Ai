@@ -1,4 +1,7 @@
-const API_BASE = "";
+const API_BASE =
+  typeof window !== "undefined" && (window.location.port === "3000" || window.location.port === "5173")
+    ? "http://localhost:8000"
+    : "";
 
 function getAuthHeader() {
   const token = localStorage.getItem("auditflow_token");
@@ -120,3 +123,4 @@ export const api = {
     list: (limit = 50) => request(`/audit-logs?limit=${limit}`),
   },
 };
+
