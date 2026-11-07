@@ -66,3 +66,4 @@ Visit `http://localhost:8000/ui` in your browser, authenticate, and use the **AI
 ## 6. Known Limits
 - Dense semantic vector search retrieves the top-5 chunks; hybrid search combining full-text PostgreSQL lexical search with pgvector embeddings is planned for Phase 2.
 - Complex tabular financial analysis spanning dozens of multi-page agreements is currently summarized within token limits; full cross-document ledger reconciliation will be introduced in Phase 2.
+

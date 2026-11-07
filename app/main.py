@@ -47,12 +47,29 @@ app.include_router(findings_router)
 app.include_router(agent_router)
 app.include_router(ui_router)
 
+import os
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+# Mount built Vite React Admin Panel if present
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.exists(frontend_dist):
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/admin", include_in_schema=False)
+    @app.get("/app", include_in_schema=False)
+    async def serve_admin_panel() -> FileResponse:
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+
 
 @app.get("/", include_in_schema=False)
 async def root() -> dict[str, str]:
     return {
         "message": "AuditFlow AI API is running",
-        "docs": "/docs",
+        "admin_panel": "/app",
         "testing_ui": "/ui",
+        "api_docs": "/docs",
     }
 
