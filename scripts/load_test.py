@@ -70,3 +70,4 @@ class AuditFlowAuditorUser(HttpUser):
             return
         payload = {"query": "Are there any duplicate invoices or missing POs?"}
         self.client.post("/agent/ask", json=payload, headers=self.headers, timeout=15.0)
+

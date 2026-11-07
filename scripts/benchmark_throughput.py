@@ -76,3 +76,4 @@ async def run_benchmark(base_url="http://localhost:8000", total_requests=100, co
 
 if __name__ == "__main__":
     asyncio.run(run_benchmark())
+

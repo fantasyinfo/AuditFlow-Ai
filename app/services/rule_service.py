@@ -170,3 +170,4 @@ class RuleService:
         await db.delete(rule)
         await db.commit()
         return True
+

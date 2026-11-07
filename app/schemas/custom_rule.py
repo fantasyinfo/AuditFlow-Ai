@@ -55,3 +55,4 @@ class RuleCatalogItem(BaseModel):
     operator: str | None = None
     threshold_value: str | None = None
     reason_template: str | None = None
+

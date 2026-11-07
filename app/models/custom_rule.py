@@ -52,3 +52,4 @@ class CustomRule(Base):
         Index("ix_custom_rules_tenant_created", "tenant_id", "created_at"),
         Index("ix_custom_rules_tenant_active", "tenant_id", "is_active"),
     )
+

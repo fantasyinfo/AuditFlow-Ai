@@ -45,3 +45,4 @@ docker compose exec api python -m unittest tests/test_e2e_pipeline.py -v
 
 ## 6. Known Limits
 - Celery worker currently writes to local volume storage (`./storage/uploads`); production deployment will swap this for MinIO or AWS S3 (`S3StorageBackend`).
+

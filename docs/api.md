@@ -80,3 +80,4 @@ The token encapsulates `tenant_id`, `user_id`, and `role`.
 
 - `GET /health`: Liveness and database connectivity.
 - `GET /metrics`: Prometheus application and HTTP request latency metrics.
+

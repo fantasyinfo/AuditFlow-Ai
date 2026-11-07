@@ -52,3 +52,4 @@ def downgrade() -> None:
     op.drop_index("ix_custom_rules_tenant_created", table_name="custom_rules")
     op.drop_constraint("uq_custom_rules_tenant_code", "custom_rules", type_="unique")
     op.drop_table("custom_rules")
+

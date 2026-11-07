@@ -41,3 +41,4 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
                 error=str(exc),
             )
             raise
+

@@ -103,3 +103,4 @@ async def delete_custom_rule(
 ) -> None:
     """Permanently delete a custom rule from the tenant catalog."""
     await RuleService.delete_custom_rule(session, current_user.tenant_id, rule_id)
+

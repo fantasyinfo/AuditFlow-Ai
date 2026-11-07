@@ -165,3 +165,4 @@ async def seed_demo_data(base_url="http://localhost:8000"):
 
 if __name__ == "__main__":
     asyncio.run(seed_demo_data())
+

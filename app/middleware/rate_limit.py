@@ -69,3 +69,4 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
             logger.debug("Rate limiting check failed; permitting request", error=str(exc))
 
         return await call_next(request)
+
