@@ -122,5 +122,26 @@ export const api = {
   auditLogs: {
     list: (limit = 50) => request(`/audit-logs?limit=${limit}`),
   },
+
+  rules: {
+    list: () => request("/rules"),
+    listCustom: () => request("/rules/custom"),
+    createCustom: (data) =>
+      request("/rules/custom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    updateCustom: (id, data) =>
+      request(`/rules/custom/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    deleteCustom: (id) =>
+      request(`/rules/custom/${id}`, {
+        method: "DELETE",
+      }),
+  },
 };
 

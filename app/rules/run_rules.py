@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.finding import Finding
 from app.models.invoice import Invoice
 from app.rules.amount_mismatch import check_amount_mismatch
+from app.rules.custom_rule_evaluator import evaluate_custom_rules
 from app.rules.duplicate_invoice import check_duplicate_invoice
 from app.rules.gstin_check import check_invalid_gstin
 from app.rules.missing_evidence import check_missing_evidence
@@ -23,9 +24,10 @@ RULES_REGISTRY = [
 
 
 def run_all_rules(invoice: Invoice, db: Session) -> list[Finding]:
-    """Execute all registered deterministic audit rules against an invoice and save findings."""
+    """Execute all registered deterministic audit rules and tenant custom rules against an invoice."""
     created_findings: list[Finding] = []
 
+    # 1. Run built-in core audit rules
     for rule_name, rule_func in RULES_REGISTRY:
         try:
             result: FindingCreate | None = rule_func(invoice, db)
@@ -62,6 +64,41 @@ def run_all_rules(invoice: Invoice, db: Session) -> list[Finding]:
                     )
         except Exception as exc:
             logger.exception("Error executing audit rule", rule=rule_name, exc=str(exc))
+
+    # 2. Run tenant-defined custom rules
+    try:
+        custom_results: list[FindingCreate] = evaluate_custom_rules(invoice, db)
+        for c_res in custom_results:
+            existing = (
+                db.query(Finding)
+                .filter(
+                    Finding.tenant_id == invoice.tenant_id,
+                    Finding.invoice_id == invoice.id,
+                    Finding.rule == c_res.rule,
+                )
+                .first()
+            )
+            if not existing:
+                finding_row = Finding(
+                    tenant_id=invoice.tenant_id,
+                    invoice_id=invoice.id,
+                    rule=c_res.rule,
+                    severity=c_res.severity,
+                    reason=c_res.reason,
+                    evidence=c_res.evidence,
+                    status="open",
+                )
+                db.add(finding_row)
+                created_findings.append(finding_row)
+                logger.info(
+                    "Custom audit rule finding triggered",
+                    rule=c_res.rule,
+                    severity=c_res.severity,
+                    invoice_id=str(invoice.id),
+                    tenant_id=str(invoice.tenant_id),
+                )
+    except Exception as exc:
+        logger.exception("Error evaluating custom rules", invoice_id=str(invoice.id), exc=str(exc))
 
     if created_findings:
         db.commit()

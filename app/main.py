@@ -1,15 +1,22 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.config import get_settings
+from app.middleware.logging import StructuredLoggingMiddleware
+from app.middleware.rate_limit import RedisRateLimitMiddleware
 from app.routes.agent import router as agent_router
 from app.routes.auth import router as auth_router
 from app.routes.documents import router as documents_router
 from app.routes.findings import router as findings_router
 from app.routes.health import router as health_router
 from app.routes.invoices import router as invoices_router
+from app.routes.rules import router as rules_router
 from app.routes.ui import router as ui_router
 
 settings = get_settings()
@@ -29,6 +36,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Custom Middlewares
+app.add_middleware(StructuredLoggingMiddleware)
+app.add_middleware(RedisRateLimitMiddleware)
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
@@ -38,18 +49,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Prometheus metrics instrumentation
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
 # Include core routers
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(documents_router)
 app.include_router(invoices_router)
 app.include_router(findings_router)
+app.include_router(rules_router)
 app.include_router(agent_router)
 app.include_router(ui_router)
-
-import os
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 # Mount built Vite React Admin Panel if present
 frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
@@ -71,5 +82,6 @@ async def root() -> dict[str, str]:
         "admin_panel": "/app",
         "testing_ui": "/ui",
         "api_docs": "/docs",
+        "metrics": "/metrics",
     }
 

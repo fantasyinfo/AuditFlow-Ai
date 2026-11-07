@@ -6,6 +6,7 @@ import DashboardModule from "./modules/dashboard/DashboardModule";
 import DocumentsModule from "./modules/documents/DocumentsModule";
 import InvoicesModule from "./modules/invoices/InvoicesModule";
 import FindingsModule from "./modules/findings/FindingsModule";
+import RulesModule from "./modules/rules/RulesModule";
 import AssistantModule from "./modules/assistant/AssistantModule";
 import AuditLogsModule from "./modules/audit-logs/AuditLogsModule";
 import DocsModule from "./modules/docs/DocsModule";
@@ -15,6 +16,7 @@ const MODULE_TITLES = {
   documents: "Document Ingestion & File Processing Queue",
   invoices: "Extracted Commercial Invoices & Metadata",
   findings: "Audit Findings & Fraud Investigation",
+  rules: "Audit Rules & Tenant Policy Builder",
   assistant: "AI Audit Assistant (Google AI Studio Gemini + RAG)",
   "audit-logs": "Immutable Compliance & Operations Trail",
   docs: "AuditFlow Platform Guide & Documentation",
@@ -47,6 +49,8 @@ export default function App() {
         return <InvoicesModule />;
       case "findings":
         return <FindingsModule />;
+      case "rules":
+        return <RulesModule />;
       case "assistant":
         return <AssistantModule />;
       case "audit-logs":

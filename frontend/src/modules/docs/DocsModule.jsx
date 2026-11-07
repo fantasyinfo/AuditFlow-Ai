@@ -16,6 +16,9 @@ import {
   Lock,
   ChevronDown,
   ChevronUp,
+  Sliders,
+  Plus,
+  FileCode,
 } from "lucide-react";
 
 export default function DocsModule({ onNavigate }) {
@@ -95,6 +98,17 @@ export default function DocsModule({ onNavigate }) {
         "Lists violations flagged by the deterministic rules engine. Each finding carries severity (Critical, High, Medium), affected invoice, and exact detection reason.",
       howToUse:
         "Auditors review open findings and click 'Confirm' or 'Dismiss', providing an explanation that is committed to the immutable audit trail.",
+    },
+    {
+      id: "rules",
+      name: "Rules & Policy Builder",
+      icon: Sliders,
+      badge: "Custom Policy Engine",
+      summary: "Define organization-specific spending thresholds and anomaly checks.",
+      whatItDoes:
+        "Allows finance teams to add custom rules (amount limits, restricted vendor checks, missing field mandates, weekend invoice alerts, keyword scanners) evaluated dynamically on every document.",
+      howToUse:
+        "Open Rules & Policy Builder, click 'Create Custom Rule', select a preset or configure custom criteria, and activate it.",
     },
     {
       id: "assistant",
@@ -211,6 +225,17 @@ export default function DocsModule({ onNavigate }) {
             }`}
           >
             Detection Rules Explained
+          </button>
+          <button
+            onClick={() => setActiveTab("custom-rules")}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+              activeTab === "custom-rules"
+                ? "bg-brand-600 text-white shadow-md shadow-brand-600/30"
+                : "bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-brand-500"
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>How to Add Your Own Rules</span>
           </button>
         </div>
       </div>
@@ -415,6 +440,134 @@ export default function DocsModule({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Tab 4: Step-by-Step Guide for Adding Custom Rules */}
+      {activeTab === "custom-rules" && (
+        <div className="space-y-6">
+          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  <span>How to Add Your Own Audit Rules: Step-by-Step</span>
+                </h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-1">
+                  In addition to the 5 built-in core invariants, you can add custom policy checks tailored to your organization's approval thresholds and supplier restrictions.
+                </p>
+              </div>
+
+              <button
+                onClick={() => onNavigate("rules")}
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-brand-600/30 shrink-0"
+              >
+                <span>Open Rules Builder</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* 3 Step Walkthrough Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+                  STEP 01
+                </span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Choose Rule Type
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Decide what anomaly to detect: spending limits (amount_threshold), supplier scrutiny (vendor_match), data integrity (missing_field), off-hours billing (date_check), or high-risk words (keyword_check).
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+                  STEP 02
+                </span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Configure Operator & Threshold
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Choose your operator (e.g. &gt;, &gt;=, contains, is_empty, weekend) and enter the threshold value (e.g. 200000.00, Consulting, or rush fee).
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+                  STEP 03
+                </span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Set Severity & Audit Template
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Assign severity (Critical, High, Medium, Low) and write the explanation message using dynamic placeholders like <code className="text-brand-500">{"{vendor}"}</code>, <code className="text-brand-500">{"{amount}"}</code>, and <code className="text-brand-500">{"{threshold}"}</code>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Fields Reference Table */}
+          <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <FileCode className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+              <span>Rule Fields, Operators & Examples Table</span>
+            </h3>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-950/70 uppercase text-[10px] text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="py-2.5 px-3">Field Name</th>
+                    <th className="py-2.5 px-3">Description</th>
+                    <th className="py-2.5 px-3">Allowed Values / Operators</th>
+                    <th className="py-2.5 px-3">Concrete Example</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr>
+                    <td className="py-2.5 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">rule_type</td>
+                    <td className="py-2.5 px-3">Evaluation category</td>
+                    <td className="py-2.5 px-3 font-mono">amount_threshold, vendor_match, missing_field, date_check, keyword_check</td>
+                    <td className="py-2.5 px-3 font-mono text-emerald-600 dark:text-emerald-400">amount_threshold</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">field_to_evaluate</td>
+                    <td className="py-2.5 px-3">The invoice property to inspect</td>
+                    <td className="py-2.5 px-3 font-mono">total_amount, vendor_name, vendor_gstin, invoice_date, text_content</td>
+                    <td className="py-2.5 px-3 font-mono text-emerald-600 dark:text-emerald-400">total_amount</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">operator</td>
+                    <td className="py-2.5 px-3">Comparison condition</td>
+                    <td className="py-2.5 px-3 font-mono">&gt;, &gt;=, &lt;, &lt;=, ==, contains, is_empty, weekend</td>
+                    <td className="py-2.5 px-3 font-mono text-emerald-600 dark:text-emerald-400">&gt;</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">threshold_value</td>
+                    <td className="py-2.5 px-3">Comparison boundary operand</td>
+                    <td className="py-2.5 px-3 font-mono">Any number, string, or keyword</td>
+                    <td className="py-2.5 px-3 font-mono text-emerald-600 dark:text-emerald-400">200000.00</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">severity</td>
+                    <td className="py-2.5 px-3">Audit priority flag</td>
+                    <td className="py-2.5 px-3 font-mono">critical, high, medium, low</td>
+                    <td className="py-2.5 px-3 font-mono text-emerald-600 dark:text-emerald-400">high</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">reason_template</td>
+                    <td className="py-2.5 px-3">Finding text template shown to auditors</td>
+                    <td className="py-2.5 px-3">Tokens: {"{vendor}"}, {"{amount}"}, {"{threshold}"}, {"{name}"}, {"{invoice_number}"}</td>
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-emerald-600 dark:text-emerald-400 truncate max-w-xs">
+                      "Invoice from {"{vendor}"} for {"{amount}"} exceeds limit of ₹{"{threshold}"}."
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

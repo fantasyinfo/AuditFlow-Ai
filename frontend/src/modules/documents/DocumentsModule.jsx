@@ -11,8 +11,15 @@ import {
   RefreshCw,
   X,
   FileCode,
+  Sparkles,
+  Eye,
+  ArrowRight,
+  BookOpen,
+  Receipt,
+  FileCheck,
 } from "lucide-react";
 import { api } from "../../api/client";
+import { DEMO_DOCUMENTS } from "../../data/demoDocuments";
 
 export default function DocumentsModule() {
   const [documents, setDocuments] = useState([]);
@@ -22,6 +29,10 @@ export default function DocumentsModule() {
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState(null);
+
+  // Demo Document Library & Preview State
+  const [showDemoLibrary, setShowDemoLibrary] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
 
   // Chunks Inspector Modal State
   const [inspectDoc, setInspectDoc] = useState(null);
@@ -75,22 +86,25 @@ export default function DocumentsModule() {
     }
   };
 
-  const seedDuplicateInvoice = async () => {
+  const handleIngestDemoDoc = async (demo) => {
     setIsUploading(true);
+    setUploadMessage(null);
     try {
-      const csv =
-        "vendor,invoice_number,date,amount,gstin\n" +
-        "Sharma Traders,INV-1042-DUP,2026-08-12,118000.00,07AAAAA0000A1Z5\n";
-      const blob = new Blob([csv], { type: "text/csv" });
-      const file = new File([blob], "invoice_1042_dup.csv", { type: "text/csv" });
-      await api.documents.upload(file, "invoice");
+      const blob = new Blob([demo.rawContent], { type: "text/csv" });
+      const file = new File([blob], demo.filename, { type: "text/csv" });
+      const res = await api.documents.upload(file, demo.type, `idemp_demo_${Date.now()}`);
       setUploadMessage({
         type: "success",
-        text: "Seeded intentional duplicate invoice INV-1042-DUP! Rules engine will trigger finding.",
+        text: `Ingested demo document "${demo.title}" (${res.id}). Celery worker is processing rules!`,
       });
+      setShowDemoLibrary(false);
+      setPreviewDoc(null);
       fetchDocuments();
     } catch (err) {
-      setUploadMessage({ type: "error", text: "Failed to seed duplicate" });
+      setUploadMessage({
+        type: "error",
+        text: err.message || "Failed to ingest demo document",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -125,15 +139,16 @@ export default function DocumentsModule() {
             </p>
           </div>
 
-          <button
-            onClick={seedDuplicateInvoice}
-            disabled={isUploading}
-            className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
-            title="Seed duplicate invoice to trigger duplicate_invoice finding"
-          >
-            <AlertCircle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-            <span>Seed Test Duplicate</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowDemoLibrary(true)}
+              className="px-3.5 py-1.5 bg-brand-600/10 hover:bg-brand-600/20 text-brand-700 dark:text-brand-300 border border-brand-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm"
+              title="Preselect and preview realistic sample invoices, quotes, agreements, and purchase orders"
+            >
+              <Sparkles className="w-4 h-4 text-brand-500" />
+              <span>Demo Document Library</span>
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleUpload} className="space-y-4">
@@ -268,7 +283,7 @@ export default function DocumentsModule() {
               {documents.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
-                    No documents ingested yet. Upload an invoice or agreement above.
+                    No documents ingested yet. Upload an invoice or select from the Demo Document Library above.
                   </td>
                 </tr>
               ) : (
@@ -315,6 +330,226 @@ export default function DocumentsModule() {
           </table>
         </div>
       </div>
+
+      {/* Demo Documents Library Modal */}
+      {showDemoLibrary && (
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl p-6 space-y-5 shadow-2xl my-8 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    Commercial Demo Document Library
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Preselected real-world invoices, quotations, contracts, and POs with planted anomalies for testing.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDemoLibrary(false)}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto p-1 flex-1">
+              {DEMO_DOCUMENTS.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 space-y-3 flex flex-col justify-between hover:border-brand-500 transition"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-brand-500/10 text-brand-700 dark:text-brand-300 font-mono">
+                        {doc.categoryLabel}
+                      </span>
+                      <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {doc.amount}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      {doc.title}
+                    </h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {doc.summary}
+                    </p>
+
+                    <div className="text-[10px] font-mono text-slate-500 space-y-0.5">
+                      <div>Vendor: <span className="text-slate-800 dark:text-slate-200">{doc.vendor}</span></div>
+                      <div>Expected: <span className="text-amber-600 dark:text-amber-400 font-medium">{doc.statusOutcome}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => setPreviewDoc(doc)}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded text-xs font-medium border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Preview Document</span>
+                    </button>
+                    <button
+                      onClick={() => handleIngestDemoDoc(doc)}
+                      disabled={isUploading}
+                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
+                    >
+                      <span>Ingest & Run</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Visual Layout Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl p-6 md:p-8 space-y-6 shadow-2xl my-6 max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    Commercial Document Preview
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                    {previewDoc.filename} ({previewDoc.categoryLabel})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPreviewDoc(null)}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Rendered Document Sheet */}
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-6 overflow-y-auto flex-1 font-sans text-xs">
+              {/* Document Header & Badge */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div>
+                  <div className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                    {previewDoc.preview.vendorName}
+                  </div>
+                  <div className="text-slate-500 text-[11px] leading-relaxed max-w-sm">
+                    {previewDoc.preview.vendorAddress}
+                  </div>
+                  <div className="text-slate-700 dark:text-slate-300 font-mono font-semibold pt-1">
+                    {previewDoc.preview.vendorTaxId}
+                  </div>
+                </div>
+
+                <div className="text-left sm:text-right space-y-1">
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded bg-brand-600 text-white uppercase tracking-wider inline-block">
+                    {previewDoc.preview.docType}
+                  </span>
+                  <div className="text-[11px] text-slate-500 font-mono">
+                    Doc #: <strong className="text-slate-900 dark:text-slate-100">{previewDoc.number}</strong>
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    Date: {previewDoc.preview.invoiceDate}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bill To & PO Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[11px]">
+                <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Billed / Issued To</span>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">{previewDoc.preview.billTo}</div>
+                  <div className="text-slate-500">{previewDoc.preview.billToAddress}</div>
+                </div>
+                <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Order & Terms</span>
+                  <div>PO Reference: <span className="font-mono font-semibold text-brand-600 dark:text-brand-400">{previewDoc.preview.poNumber}</span></div>
+                  <div>Terms: <span className="text-slate-600 dark:text-slate-300">{previewDoc.preview.paymentTerms}</span></div>
+                </div>
+              </div>
+
+              {/* Line Items Table */}
+              <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 dark:bg-slate-800/80 uppercase text-[10px] text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                      <th className="py-2.5 px-3">Description</th>
+                      <th className="py-2.5 px-3 text-center">Qty</th>
+                      <th className="py-2.5 px-3 text-right">Unit Rate</th>
+                      <th className="py-2.5 px-3 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {previewDoc.preview.lineItems.map((item, iIdx) => (
+                      <tr key={iIdx}>
+                        <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-slate-200">{item.desc}</td>
+                        <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400">{item.qty}</td>
+                        <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">{item.rate}</td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{item.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals & Tax */}
+              <div className="flex justify-end text-xs">
+                <div className="w-64 space-y-1.5 p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div className="flex justify-between text-slate-500">
+                    <span>Subtotal:</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{previewDoc.preview.subtotal}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-500">
+                    <span>{previewDoc.preview.taxRate}:</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{previewDoc.preview.taxAmount}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-sm pt-1.5 border-t border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
+                    <span>Net Total:</span>
+                    <span className="font-mono text-brand-600 dark:text-brand-400">{previewDoc.preview.totalAmount}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes & Signatory */}
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px] text-slate-500">
+                <div className="italic max-w-md">{previewDoc.preview.notes}</div>
+                <div className="font-semibold text-slate-700 dark:text-slate-300">Authorized: {previewDoc.preview.signatory}</div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-2 flex justify-between items-center border-t border-slate-200 dark:border-slate-800">
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                Expected Finding: {previewDoc.statusOutcome}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => handleIngestDemoDoc(previewDoc)}
+                  disabled={isUploading}
+                  className="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow-md shadow-brand-600/30"
+                >
+                  <span>Ingest This Document Now</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chunks & Vector Inspector Modal */}
       {inspectDoc && (

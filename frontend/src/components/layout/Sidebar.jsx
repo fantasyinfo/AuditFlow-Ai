@@ -10,6 +10,7 @@ import {
   Building2,
   Shuffle,
   BookOpen,
+  Sliders,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -42,8 +43,15 @@ export default function Sidebar({ currentModule, onSelectModule }) {
       id: "findings",
       label: "Audit Findings",
       icon: AlertTriangle,
-      badge: "5 Rules",
+      badge: "Review",
       desc: "Anomalies & Frauds",
+    },
+    {
+      id: "rules",
+      label: "Rules & Policy Builder",
+      icon: Sliders,
+      badge: "Custom",
+      desc: "Tenant Limits & Rules",
     },
     {
       id: "assistant",

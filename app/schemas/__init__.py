@@ -8,6 +8,12 @@ from app.schemas.auth import (
     UserRegisterRequest,
 )
 from app.schemas.chunk import ChunkRead
+from app.schemas.custom_rule import (
+    CustomRuleCreate,
+    CustomRuleResponse,
+    CustomRuleUpdate,
+    RuleCatalogItem,
+)
 from app.schemas.document import (
     DocumentRead,
     DocumentStatus,

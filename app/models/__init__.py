@@ -1,5 +1,6 @@
 from app.models.audit_log import AuditLog
 from app.models.chunk import DocumentChunk
+from app.models.custom_rule import CustomRule
 from app.models.document import Document, DocumentStatus, DocumentType
 from app.models.finding import Finding, FindingSeverity, FindingStatus
 from app.models.idempotency import IdempotencyKey
@@ -22,4 +23,5 @@ __all__ = [
     "FindingStatus",
     "FindingSeverity",
     "AuditLog",
+    "CustomRule",
 ]
