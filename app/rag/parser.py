@@ -3,7 +3,7 @@ import io
 import json
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Optional
@@ -26,6 +26,12 @@ class ExtractedInvoiceData:
     document_type: str = "invoice"
     customer_name: Optional[str] = None
     summary: Optional[str] = None
+    net_amount: Decimal = Decimal("0.00")
+    tax_amount: Decimal = Decimal("0.00")
+    paid_amount: Decimal = Decimal("0.00")
+    payment_status: str = "unpaid"
+    due_date: Optional[date] = None
+    description: Optional[str] = None
 
 
 @dataclass
@@ -33,6 +39,7 @@ class ParsedDocument:
     full_text: str
     pages: list[tuple[int, str]]  # list of (page_number, text)
     extracted_invoice: Optional[ExtractedInvoiceData] = None
+    extracted_invoices: list[ExtractedInvoiceData] = field(default_factory=list)
 
 
 # International and Indian Tax ID / GSTIN
@@ -193,69 +200,242 @@ def parse_csv(content: bytes) -> ParsedDocument:
     text = content.decode("utf-8", errors="replace")
     reader = csv.DictReader(io.StringIO(text))
     pages: list[tuple[int, str]] = []
-    extracted: Optional[ExtractedInvoiceData] = None
+    extracted_invoices: list[ExtractedInvoiceData] = []
 
     row_texts = []
     for idx, row in enumerate(reader, start=1):
-        norm_row = {k.strip().lower().replace(" ", "_"): (v or "").strip() for k, v in row.items() if k}
+        norm_row = {
+            k.strip().lower().replace(" ", "_").replace("-", "_"): (v or "").strip()
+            for k, v in row.items()
+            if k
+        }
         row_summary = ", ".join(f"{k}: {v}" for k, v in norm_row.items())
         row_line = f"Row {idx}: {row_summary}"
         row_texts.append(row_line)
 
-        if extracted is None:
-            vendor = (
-                norm_row.get("vendor")
-                or norm_row.get("vendor_name")
-                or norm_row.get("supplier")
-                or norm_row.get("company")
-                or norm_row.get("contractor")
-            )
-            inv_no = (
-                norm_row.get("invoice_number")
-                or norm_row.get("invoice_no")
-                or norm_row.get("invoice_#")
-                or norm_row.get("quote_number")
-                or norm_row.get("agreement_number")
-                or norm_row.get("po_number")
-                or norm_row.get("inv_num")
-                or norm_row.get("id")
-            )
-            amt_raw = (
-                norm_row.get("amount")
-                or norm_row.get("total_amount")
-                or norm_row.get("total")
-                or norm_row.get("net_amount")
-                or norm_row.get("contract_value")
-            )
-            gstin = (
-                norm_row.get("gstin")
-                or norm_row.get("vendor_gstin")
-                or norm_row.get("tax_id")
-                or norm_row.get("vat")
-            )
-            date_raw = (
-                norm_row.get("date")
-                or norm_row.get("invoice_date")
-                or norm_row.get("effective_date")
-            )
+        # 1. Vendor
+        vendor = (
+            norm_row.get("vendor_name")
+            or norm_row.get("vendor")
+            or norm_row.get("supplier_name")
+            or norm_row.get("supplier")
+            or norm_row.get("company_name")
+            or norm_row.get("company")
+            or norm_row.get("contractor")
+            or norm_row.get("service_provider")
+            or norm_row.get("billed_by")
+            or norm_row.get("seller")
+            or norm_row.get("merchant")
+        )
+        if not vendor:
+            for k, v in norm_row.items():
+                if ("vendor" in k or "supplier" in k) and v:
+                    vendor = v
+                    break
 
-            if vendor and inv_no and amt_raw:
-                dec_amt = _clean_amount(amt_raw)
-                if dec_amt is not None:
-                    parsed_dt = _parse_date(date_raw) if date_raw else None
-                    extracted = ExtractedInvoiceData(
-                        vendor_name=vendor,
-                        invoice_number=inv_no,
-                        total_amount=dec_amt,
-                        invoice_date=parsed_dt,
-                        vendor_gstin=gstin,
-                        currency=_detect_currency(text),
-                        document_type=_detect_document_type(text),
-                    )
+        # 2. Customer
+        customer = (
+            norm_row.get("customer_name")
+            or norm_row.get("customer")
+            or norm_row.get("client_name")
+            or norm_row.get("client")
+            or norm_row.get("billed_to")
+        )
+
+        # 3. Invoice Number / Reference
+        inv_no = (
+            norm_row.get("invoice_id")
+            or norm_row.get("invoice_no")
+            or norm_row.get("invoice_num")
+            or norm_row.get("invoice_number")
+            or norm_row.get("inv_id")
+            or norm_row.get("inv_no")
+            or norm_row.get("inv_num")
+            or norm_row.get("inv_number")
+            or norm_row.get("invoice_#")
+            or norm_row.get("bill_no")
+            or norm_row.get("bill_num")
+            or norm_row.get("bill_id")
+            or norm_row.get("reference_no")
+            or norm_row.get("reference_number")
+            or norm_row.get("quote_number")
+            or norm_row.get("quote_id")
+            or norm_row.get("agreement_number")
+            or norm_row.get("po_number")
+            or norm_row.get("po_id")
+            or norm_row.get("id")
+        )
+        if not inv_no:
+            for k, v in norm_row.items():
+                if ("invoice" in k or "bill" in k or "inv" in k) and any(x in k for x in ("id", "no", "num")) and v:
+                    inv_no = v
+                    break
+
+        # 4. Total Amount
+        amt_raw = (
+            norm_row.get("total_amount_inr")
+            or norm_row.get("total_amount_usd")
+            or norm_row.get("total_amount_eur")
+            or norm_row.get("total_amount")
+            or norm_row.get("total_inr")
+            or norm_row.get("total_usd")
+            or norm_row.get("total")
+            or norm_row.get("grand_total")
+            or norm_row.get("gross_amount")
+            or norm_row.get("amount_inr")
+            or norm_row.get("amount_usd")
+            or norm_row.get("amount")
+            or norm_row.get("net_amount")
+            or norm_row.get("contract_value")
+            or norm_row.get("balance_due")
+        )
+        if not amt_raw:
+            for k, v in norm_row.items():
+                if "total" in k and any(x in k for x in ("amount", "inr", "usd", "val")) and v:
+                    amt_raw = v
+                    break
+
+        # 5. Net Amount (Subtotal)
+        net_raw = (
+            norm_row.get("subtotal_inr")
+            or norm_row.get("subtotal_usd")
+            or norm_row.get("subtotal")
+            or norm_row.get("net_amount_inr")
+            or norm_row.get("net_amount_usd")
+            or norm_row.get("net_amount")
+            or norm_row.get("base_amount")
+            or norm_row.get("taxable_amount")
+        )
+
+        # 6. Tax Amount
+        tax_raw = (
+            norm_row.get("tax_amount_inr")
+            or norm_row.get("tax_amount_usd")
+            or norm_row.get("tax_amount")
+            or norm_row.get("tax_inr")
+            or norm_row.get("tax")
+            or norm_row.get("gst_amount")
+            or norm_row.get("gst")
+            or norm_row.get("vat_amount")
+            or norm_row.get("vat")
+        )
+
+        # 7. Tax Rate
+        tax_rate_raw = (
+            norm_row.get("tax_rate_percent")
+            or norm_row.get("tax_rate")
+            or norm_row.get("gst_rate")
+            or norm_row.get("tax_percent")
+        )
+
+        # 8. GSTIN / Tax ID
+        gstin = (
+            norm_row.get("vendor_gstin")
+            or norm_row.get("gstin")
+            or norm_row.get("tax_id")
+            or norm_row.get("vat_number")
+            or norm_row.get("vat")
+            or norm_row.get("ein")
+        )
+
+        # 9. Dates
+        date_raw = (
+            norm_row.get("invoice_date")
+            or norm_row.get("bill_date")
+            or norm_row.get("doc_date")
+            or norm_row.get("date")
+            or norm_row.get("created_date")
+            or norm_row.get("effective_date")
+        )
+        due_date_raw = norm_row.get("due_date") or norm_row.get("payment_due_date")
+
+        # 10. Payment Status & Paid Amount
+        status_raw = (
+            norm_row.get("payment_status")
+            or norm_row.get("paid_status")
+            or norm_row.get("status")
+            or norm_row.get("payment")
+        )
+        paid_amt_raw = (
+            norm_row.get("paid_amount_inr")
+            or norm_row.get("paid_amount_usd")
+            or norm_row.get("paid_amount")
+            or norm_row.get("amount_paid")
+            or norm_row.get("paid")
+        )
+
+        currency = norm_row.get("currency") or _detect_currency(text)
+        description = norm_row.get("description") or norm_row.get("summary") or norm_row.get("item_description")
+
+        if vendor and inv_no and amt_raw:
+            dec_amt = _clean_amount(amt_raw)
+            if dec_amt is not None and dec_amt > Decimal("0.00"):
+                parsed_dt = _parse_date(date_raw) if date_raw else None
+                parsed_due_dt = _parse_date(due_date_raw) if due_date_raw else None
+                dec_net = _clean_amount(net_raw) if net_raw else Decimal("0.00")
+                dec_tax = _clean_amount(tax_raw) if tax_raw else Decimal("0.00")
+
+                # If net/tax missing but tax rate given, compute net and tax
+                if (dec_net == 0 or dec_tax == 0) and tax_rate_raw:
+                    clean_rate = _clean_amount(tax_rate_raw)
+                    if clean_rate and clean_rate > 0:
+                        factor = Decimal("1.00") + (clean_rate / Decimal("100.00"))
+                        dec_net = (dec_amt / factor).quantize(Decimal("0.01"))
+                        dec_tax = dec_amt - dec_net
+
+                # Payment calculations
+                dec_paid = _clean_amount(paid_amt_raw) if paid_amt_raw else None
+                norm_status = status_raw.strip().lower() if status_raw else "unpaid"
+
+                if dec_paid is not None:
+                    if dec_paid >= dec_amt:
+                        final_status = "paid"
+                    elif dec_paid > Decimal("0.00"):
+                        final_status = "partially_paid"
+                    else:
+                        final_status = "unpaid"
+                else:
+                    if norm_status in ("paid", "completed", "settled"):
+                        final_status = "paid"
+                        dec_paid = dec_amt
+                    elif norm_status in ("partially paid", "partially_paid", "partial"):
+                        final_status = "partially_paid"
+                        if dec_net and Decimal("0.00") < dec_net < dec_amt:
+                            dec_paid = dec_net
+                        else:
+                            dec_paid = (dec_amt / Decimal("2.00")).quantize(Decimal("0.01"))
+                    else:
+                        final_status = "unpaid"
+                        dec_paid = Decimal("0.00")
+
+                invoice_obj = ExtractedInvoiceData(
+                    vendor_name=vendor,
+                    invoice_number=inv_no,
+                    total_amount=dec_amt,
+                    invoice_date=parsed_dt,
+                    vendor_gstin=gstin,
+                    currency=currency,
+                    document_type="invoice",
+                    customer_name=customer,
+                    summary=description,
+                    net_amount=dec_net or Decimal("0.00"),
+                    tax_amount=dec_tax or Decimal("0.00"),
+                    paid_amount=dec_paid or Decimal("0.00"),
+                    payment_status=final_status,
+                    due_date=parsed_due_dt,
+                    description=description,
+                )
+                extracted_invoices.append(invoice_obj)
 
     full_text = "\n".join(row_texts)
     pages.append((1, full_text))
-    return ParsedDocument(full_text=full_text, pages=pages, extracted_invoice=extracted)
+    primary_extracted = extracted_invoices[0] if extracted_invoices else None
+    return ParsedDocument(
+        full_text=full_text,
+        pages=pages,
+        extracted_invoice=primary_extracted,
+        extracted_invoices=extracted_invoices,
+    )
 
 
 def parse_pdf(content: bytes) -> ParsedDocument:
@@ -274,7 +454,12 @@ def parse_pdf(content: bytes) -> ParsedDocument:
     # First attempt: Google AI Studio / LLM extraction for flexible non-fixed markups
     extracted = extract_with_gemini_or_llm(full_text)
     if extracted is not None:
-        return ParsedDocument(full_text=full_text, pages=pages, extracted_invoice=extracted)
+        return ParsedDocument(
+            full_text=full_text,
+            pages=pages,
+            extracted_invoice=extracted,
+            extracted_invoices=[extracted],
+        )
 
     # Fallback: Robust Multi-Pattern Regex Extraction
     vendor_match = VENDOR_REGEX.search(full_text)
@@ -309,7 +494,13 @@ def parse_pdf(content: bytes) -> ParsedDocument:
                 document_type=_detect_document_type(full_text),
             )
 
-    return ParsedDocument(full_text=full_text, pages=pages, extracted_invoice=extracted)
+    invoices_list = [extracted] if extracted else []
+    return ParsedDocument(
+        full_text=full_text,
+        pages=pages,
+        extracted_invoice=extracted,
+        extracted_invoices=invoices_list,
+    )
 
 
 def parse_document(filename: str, content: bytes) -> ParsedDocument:
@@ -320,4 +511,4 @@ def parse_document(filename: str, content: bytes) -> ParsedDocument:
         return parse_pdf(content)
     else:
         txt = content.decode("utf-8", errors="replace")
-        return ParsedDocument(full_text=txt, pages=[(1, txt)], extracted_invoice=None)
+        return ParsedDocument(full_text=txt, pages=[(1, txt)], extracted_invoice=None, extracted_invoices=[])

@@ -68,9 +68,14 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
             )
             session.add(chunk_row)
 
-        # Step 7: Persist extracted invoice and evaluate audit rules
-        if parsed.extracted_invoice:
-            inv = parsed.extracted_invoice
+        # Step 7: Persist extracted invoice(s) and evaluate audit rules
+        invoices_to_process = (
+            parsed.extracted_invoices
+            if parsed.extracted_invoices
+            else ([parsed.extracted_invoice] if parsed.extracted_invoice else [])
+        )
+
+        for inv in invoices_to_process:
             existing_invoice = session.query(Invoice).filter(
                 Invoice.tenant_id == tenant_uuid,
                 Invoice.vendor_name == inv.vendor_name,
@@ -80,44 +85,65 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
             target_invoice = existing_invoice
             if not existing_invoice:
                 try:
-                    invoice_row = Invoice(
-                        tenant_id=tenant_uuid,
-                        document_id=doc_uuid,
-                        project_id=doc.project_id,
-                        vendor_name=inv.vendor_name,
-                        vendor_gstin=inv.vendor_gstin,
-                        invoice_number=inv.invoice_number,
-                        invoice_date=inv.invoice_date,
-                        total_amount=inv.total_amount,
-                    )
-                    session.add(invoice_row)
-                    session.flush()
-                    target_invoice = invoice_row
+                    with session.begin_nested():
+                        invoice_row = Invoice(
+                            tenant_id=tenant_uuid,
+                            document_id=doc_uuid,
+                            project_id=doc.project_id,
+                            vendor_name=inv.vendor_name,
+                            vendor_gstin=inv.vendor_gstin,
+                            invoice_number=inv.invoice_number,
+                            invoice_date=inv.invoice_date,
+                            total_amount=inv.total_amount,
+                            tax_amount=inv.tax_amount,
+                            net_amount=inv.net_amount,
+                            paid_amount=inv.paid_amount,
+                            payment_status=inv.payment_status,
+                        )
+                        session.add(invoice_row)
+                        session.flush()
+                        target_invoice = invoice_row
                     logger.info(
                         "Invoice record extracted and saved",
                         vendor=inv.vendor_name,
                         invoice_number=inv.invoice_number,
                         amount=str(inv.total_amount),
+                        paid_amount=str(inv.paid_amount),
+                        status=inv.payment_status,
                         tenant_id=tenant_id,
                     )
                 except Exception as insert_exc:
-                    session.rollback()
-                    # Re-query existing invoice
+                    logger.warning("Invoice insert conflict fallback to query", exc=str(insert_exc))
                     target_invoice = session.query(Invoice).filter(
                         Invoice.tenant_id == tenant_uuid,
                         Invoice.vendor_name == inv.vendor_name,
                         Invoice.invoice_number == inv.invoice_number,
                     ).first()
+            else:
+                if doc.project_id and not existing_invoice.project_id:
+                    existing_invoice.project_id = doc.project_id
+                if not existing_invoice.document_id:
+                    existing_invoice.document_id = doc_uuid
+                if inv.net_amount > 0 and existing_invoice.net_amount == 0:
+                    existing_invoice.net_amount = inv.net_amount
+                if inv.tax_amount > 0 and existing_invoice.tax_amount == 0:
+                    existing_invoice.tax_amount = inv.tax_amount
+                if inv.paid_amount > 0 and existing_invoice.paid_amount == 0:
+                    existing_invoice.paid_amount = inv.paid_amount
+                    existing_invoice.payment_status = inv.payment_status
+                session.flush()
+                target_invoice = existing_invoice
 
-            # Evaluate audit detection rules
-            from app.rules.run_rules import run_all_rules
-            findings = run_all_rules(target_invoice, session)
-            logger.info(
-                "Audit rules evaluated",
-                findings_count=len(findings),
-                invoice_id=str(target_invoice.id),
-                tenant_id=tenant_id,
-            )
+            if target_invoice:
+                # Evaluate audit detection rules
+                from app.rules.run_rules import run_all_rules
+                findings = run_all_rules(target_invoice, session)
+                logger.info(
+                    "Audit rules evaluated",
+                    findings_count=len(findings),
+                    invoice_id=str(target_invoice.id),
+                    tenant_id=tenant_id,
+                )
 
         # Step 8: Mark document processing complete
         doc.status = DocumentStatus.DONE.value
@@ -127,7 +153,7 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
             "Document parsing and embedding pipeline complete",
             document_id=document_id,
             chunks_count=len(chunks),
-            invoice_extracted=parsed.extracted_invoice is not None,
+            invoices_extracted_count=len(invoices_to_process),
             tenant_id=tenant_id,
         )
         return {
