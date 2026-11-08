@@ -28,13 +28,23 @@ class StorageBackend(Protocol):
 class LocalStorageBackend:
     """Local filesystem storage backend, saving files under UPLOAD_DIR/<tenant_id>/."""
 
-    def __init__(self, base_dir: str = settings.UPLOAD_DIR):
-        self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self, base_dir: str | None = None):
+        target_dir = base_dir or settings.UPLOAD_DIR
+        try:
+            self.base_dir = Path(target_dir)
+            self.base_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            # Ephemeral /tmp fallback for serverless platforms like Vercel
+            self.base_dir = Path("/tmp/uploads")
+            self.base_dir.mkdir(parents=True, exist_ok=True)
 
     async def save_file(self, tenant_id: uuid.UUID, filename: str, content: bytes) -> str:
         tenant_dir = self.base_dir / str(tenant_id)
-        tenant_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            tenant_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            tenant_dir = Path("/tmp/uploads") / str(tenant_id)
+            tenant_dir.mkdir(parents=True, exist_ok=True)
 
         # Unique file name to prevent collision
         unique_prefix = uuid.uuid4().hex[:12]

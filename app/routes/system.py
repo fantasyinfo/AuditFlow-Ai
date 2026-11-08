@@ -147,3 +147,4 @@ async def configure_ai_key(
         model=settings.LLM_MODEL,
         is_live_configured=True,
     )
+

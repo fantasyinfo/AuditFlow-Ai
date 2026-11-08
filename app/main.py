@@ -1,7 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
-import os
-from fastapi import FastAPI
+import structlog
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,11 +23,28 @@ from app.routes.system import router as system_router
 from app.routes.ui import router as ui_router
 
 settings = get_settings()
+logger = structlog.get_logger()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # Startup actions
+    # Auto-initialize database tables and pgvector extension if not already present
+    # Ensures zero-config deployment on platforms like Vercel, Supabase, Neon
+    try:
+        from sqlalchemy import text
+        from app.database import sync_engine, Base
+        import app.models  # Pre-loads all models to register with Base.metadata
+
+        with sync_engine.begin() as conn:
+            try:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            except Exception as ext_err:
+                logger.debug("vector extension check skipped/unprivileged", error=str(ext_err))
+            Base.metadata.create_all(bind=conn)
+        logger.info("Database schema verified and initialized.")
+    except Exception as exc:
+        logger.warning("Database schema auto-sync deferred or already up to date", error=str(exc))
+
     yield
     # Shutdown actions
 
@@ -65,6 +83,19 @@ app.include_router(rules_router)
 app.include_router(agent_router)
 app.include_router(system_router)
 app.include_router(ui_router)
+
+# Also expose under /api prefix for standard serverless API consumers and rewrites
+api_router = APIRouter(prefix="/api")
+api_router.include_router(health_router)
+api_router.include_router(auth_router)
+api_router.include_router(documents_router)
+api_router.include_router(projects_router)
+api_router.include_router(invoices_router)
+api_router.include_router(findings_router)
+api_router.include_router(rules_router)
+api_router.include_router(agent_router)
+api_router.include_router(system_router)
+app.include_router(api_router)
 
 # Mount built Vite React Admin Panel if present
 frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")

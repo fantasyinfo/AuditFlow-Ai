@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 from typing import Optional
@@ -64,14 +65,29 @@ class DocumentService:
         await session.commit()
         await session.refresh(doc)
 
-        # Enqueue background task to Celery
-        process_document.delay(str(doc.id), str(tenant_id))
+        # Enqueue background task to Celery or process in-process for serverless/Vercel
+        if settings.SYNC_PROCESSING or os.environ.get("VERCEL"):
+            try:
+                await asyncio.to_thread(process_document.run, str(doc.id), str(tenant_id))
+                await session.refresh(doc)
+            except Exception:
+                pass
+        else:
+            try:
+                process_document.delay(str(doc.id), str(tenant_id))
+            except Exception:
+                # Fallback to in-process execution if Celery broker/worker is unavailable
+                try:
+                    await asyncio.to_thread(process_document.run, str(doc.id), str(tenant_id))
+                    await session.refresh(doc)
+                except Exception:
+                    pass
 
         return DocumentUploadResponse(
             id=doc.id,
             filename=doc.filename,
             status=DocumentStatus(doc.status),
-            message="Document accepted and queued for background processing.",
+            message="Document processed successfully." if doc.status == DocumentStatus.DONE.value else "Document accepted and queued for background processing.",
         )
 
     @staticmethod

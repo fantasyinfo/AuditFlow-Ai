@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -49,9 +50,10 @@ class Settings(BaseSettings):
     EMBEDDING_DIM: int = 1536
 
     # File Storage
-    UPLOAD_DIR: str = "./uploads"
+    UPLOAD_DIR: str = "/tmp/uploads" if os.environ.get("VERCEL") else "./uploads"
     MAX_UPLOAD_MB: int = 10
     RATE_LIMIT_PER_MINUTE: int = 120
+    SYNC_PROCESSING: bool = bool(os.environ.get("VERCEL"))
 
 
 @lru_cache
