@@ -4,14 +4,14 @@ This guide explains how to deploy the entire AuditFlow AI platform (React fronte
 
 ---
 
-## 1. Architecture on Vercel
+## 1. Architecture on Vercel (Services All-In-One)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Vercel Edge Network                      │
 │                                                             │
-│   Static Assets (React + Vite + Tailwind)  ──> Edge CDN     │
-│   API Requests (/documents, /projects, etc)──> api/index.py │
+│   Static Assets & SPA (/...) ─────────────> Frontend (Vite) │
+│   API Requests (/documents, /projects, etc)─> Backend (FastAPI)│
 └───────────────────────────┬─────────────────────────────────┘
                             │
             ┌───────────────┴───────────────┐
@@ -20,10 +20,11 @@ This guide explains how to deploy the entire AuditFlow AI platform (React fronte
   (Neon / Supabase / Railway)       (Free Tier LLM & Vision)
 ```
 
-- **Frontend:** Built via `cd frontend && npm install && npm run build` and output to `frontend/dist`.
-- **Backend:** Ephemeral Python 3.12 ASGI serverless function served by `api/index.py` using `NullPool` database connections to eliminate connection leaks across cold/warm starts.
-- **Background Tasks:** Synchronous in-process execution (`SYNC_PROCESSING=true`) processes uploaded invoices and evaluates audit detection rules within milliseconds during the request.
-- **Storage:** Writes to ephemeral `/tmp/uploads` on Vercel functions, avoiding read-only root errors.
+- **All-in-One Deployment:** Uses official **Vercel Services** defined in `vercel.json`.
+- **Frontend Service:** Located in `frontend/`, built with Vite React.
+- **Backend Service:** Located at root `.`, entrypoint `app/main.py` using Python FastAPI.
+- **Unified Domain:** Both frontend and backend share the exact same domain without CORS issues.
+- **Database Connection:** Connects directly to Neon PostgreSQL with `NullPool` serverless pooling.
 
 ---
 
@@ -120,3 +121,4 @@ Once your deployment is live at `https://<your-project>.vercel.app`:
 - [ ] Visit `https://<your-project>.vercel.app/health` — verify `{"status":"healthy","database":"connected"}`.
 - [ ] Upload an invoice in the **Documents** tab — verify that commercial record extraction and audit rules evaluate successfully.
 - [ ] Ask a question in the **AI Assistant** tab — verify that the strictly read-only LangChain agent answers with exact citations.
+

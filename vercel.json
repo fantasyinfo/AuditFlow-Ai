@@ -1,33 +1,38 @@
 {
-  "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
-  "cleanUrls": true,
-  "trailingSlash": false,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "frontend": {
+      "root": "frontend"
+    },
+    "backend": {
+      "root": ".",
+      "entrypoint": "app/main.py"
+    }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/auth/(.*)", "destination": "/api/index.py" },
-    { "source": "/auth", "destination": "/api/index.py" },
-    { "source": "/documents/(.*)", "destination": "/api/index.py" },
-    { "source": "/documents", "destination": "/api/index.py" },
-    { "source": "/invoices/(.*)", "destination": "/api/index.py" },
-    { "source": "/invoices", "destination": "/api/index.py" },
-    { "source": "/projects/(.*)", "destination": "/api/index.py" },
-    { "source": "/projects", "destination": "/api/index.py" },
-    { "source": "/findings/(.*)", "destination": "/api/index.py" },
-    { "source": "/findings", "destination": "/api/index.py" },
-    { "source": "/rules/(.*)", "destination": "/api/index.py" },
-    { "source": "/rules", "destination": "/api/index.py" },
-    { "source": "/agent/(.*)", "destination": "/api/index.py" },
-    { "source": "/agent", "destination": "/api/index.py" },
-    { "source": "/system/(.*)", "destination": "/api/index.py" },
-    { "source": "/system", "destination": "/api/index.py" },
-    { "source": "/health", "destination": "/api/index.py" },
-    { "source": "/metrics", "destination": "/api/index.py" },
-    { "source": "/docs", "destination": "/api/index.py" },
-    { "source": "/openapi.json", "destination": "/api/index.py" },
-    { "source": "/ui/(.*)", "destination": "/api/index.py" },
-    { "source": "/ui", "destination": "/api/index.py" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/auth/(.*)", "destination": { "service": "backend" } },
+    { "source": "/auth", "destination": { "service": "backend" } },
+    { "source": "/documents/(.*)", "destination": { "service": "backend" } },
+    { "source": "/documents", "destination": { "service": "backend" } },
+    { "source": "/invoices/(.*)", "destination": { "service": "backend" } },
+    { "source": "/invoices", "destination": { "service": "backend" } },
+    { "source": "/projects/(.*)", "destination": { "service": "backend" } },
+    { "source": "/projects", "destination": { "service": "backend" } },
+    { "source": "/findings/(.*)", "destination": { "service": "backend" } },
+    { "source": "/findings", "destination": { "service": "backend" } },
+    { "source": "/rules/(.*)", "destination": { "service": "backend" } },
+    { "source": "/rules", "destination": { "service": "backend" } },
+    { "source": "/agent/(.*)", "destination": { "service": "backend" } },
+    { "source": "/agent", "destination": { "service": "backend" } },
+    { "source": "/system/(.*)", "destination": { "service": "backend" } },
+    { "source": "/system", "destination": { "service": "backend" } },
+    { "source": "/health", "destination": { "service": "backend" } },
+    { "source": "/metrics", "destination": { "service": "backend" } },
+    { "source": "/docs", "destination": { "service": "backend" } },
+    { "source": "/openapi.json", "destination": { "service": "backend" } },
+    { "source": "/ui/(.*)", "destination": { "service": "backend" } },
+    { "source": "/ui", "destination": { "service": "backend" } },
+    { "source": "/(.*)", "destination": { "service": "frontend" } }
   ]
 }
