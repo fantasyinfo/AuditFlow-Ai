@@ -40,6 +40,8 @@ class ParsedDocument:
     pages: list[tuple[int, str]]  # list of (page_number, text)
     extracted_invoice: Optional[ExtractedInvoiceData] = None
     extracted_invoices: list[ExtractedInvoiceData] = field(default_factory=list)
+    detected_document_type: str = "invoice"
+    ai_model_used: Optional[str] = None
 
 
 # International and Indian Tax ID / GSTIN
@@ -137,32 +139,47 @@ def _detect_document_type(text: str) -> str:
     return "invoice"
 
 
-def extract_with_gemini_or_llm(text: str) -> Optional[ExtractedInvoiceData]:
-    """Uses Google AI Studio (Gemini) or configured LLM to understand any arbitrary invoice, quotation, or agreement."""
+def extract_with_gemini_or_llm(text: str) -> tuple[list[ExtractedInvoiceData], str, Optional[str]]:
+    """Uses Google AI Studio (Gemini) or configured LLM to extract any arbitrary invoice, quotation, PO, contract, or batch statement."""
     if not is_live_llm_configured():
-        return None
+        return ([], "invoice", None)
 
     try:
-        llm = get_chat_model(temperature=0.0, max_tokens=500, timeout=12.0)
+        llm = get_chat_model(temperature=0.0, max_tokens=1500, timeout=20.0)
         if llm is None:
-            return None
+            return ([], "invoice", None)
+
+        from app.config import get_settings
+        cfg = get_settings()
+        model_name = cfg.LLM_MODEL
 
         prompt = (
-            "You are an expert financial and contract parser. "
-            "Extract structured metadata from the following international document (which could be an invoice, quotation, contract agreement, or purchase order with any custom layout).\n\n"
-            "Return ONLY a valid JSON object with NO markdown ticks, comments, or preamble:\n"
+            "You are an expert global financial, accounts payable, and legal contract auditor. "
+            "Analyze the following document text and extract all commercial records (invoices, quotations, contracts, agreements, purchase orders, or line items).\n\n"
+            "Return ONLY a valid JSON object matching this schema with NO markdown ticks or conversational preamble:\n"
             "{\n"
-            '  "document_type": "invoice | quotation | agreement | purchase_order",\n'
-            '  "vendor_name": "Entity or vendor name issuing the document",\n'
-            '  "customer_name": "Billed party, counterparty or client name",\n'
-            '  "reference_number": "Invoice #, Quotation #, Agreement #, or PO #",\n'
-            '  "document_date": "YYYY-MM-DD or null",\n'
-            '  "total_amount": "numeric string with 2 decimals e.g. 118000.00 or null",\n'
-            '  "currency": "USD, EUR, GBP, INR, CAD, AUD, etc.",\n'
-            '  "tax_id": "GSTIN, VAT, or EIN if present or null",\n'
-            '  "summary": "1-sentence summary of services, goods, or agreement scope"\n'
+            '  "detected_document_type": "invoice | quotation | agreement | purchase_order | billing_statement",\n'
+            '  "summary": "1-2 sentence executive summary of the document",\n'
+            '  "records": [\n'
+            "    {\n"
+            '      "vendor_name": "Supplier or issuing entity name",\n'
+            '      "customer_name": "Billed party, counterparty or client name",\n'
+            '      "reference_number": "Invoice ID / Quotation # / Agreement # / PO #",\n'
+            '      "document_date": "YYYY-MM-DD or null",\n'
+            '      "due_date": "YYYY-MM-DD or null",\n'
+            '      "total_amount": "Total gross amount as numeric string e.g. 118000.00",\n'
+            '      "net_amount": "Subtotal / net amount before tax, or null",\n'
+            '      "tax_amount": "GST / VAT / Tax amount, or null",\n'
+            '      "tax_rate": "Tax percentage e.g. 18 or null",\n'
+            '      "currency": "INR, USD, EUR, GBP, CAD, etc.",\n'
+            '      "tax_id": "GSTIN, VAT, or EIN if present or null",\n'
+            '      "payment_status": "unpaid | paid | partially_paid",\n'
+            '      "paid_amount": "Amount paid if indicated, or null",\n'
+            '      "description": "Brief description of goods/services"\n'
+            "    }\n"
+            "  ]\n"
             "}\n\n"
-            f"Document text:\n{text[:4000]}"
+            f"Document text:\n{text[:12000]}"
         )
         resp = llm.invoke(prompt)
         raw = str(resp.content).strip()
@@ -171,29 +188,63 @@ def extract_with_gemini_or_llm(text: str) -> Optional[ExtractedInvoiceData]:
             raw = re.sub(r"\n?```$", "", raw)
 
         data = json.loads(raw)
-        vendor = data.get("vendor_name")
-        ref_no = data.get("reference_number")
-        amt_str = data.get("total_amount")
+        detected_type = data.get("detected_document_type", "invoice")
+        records_raw = data.get("records")
+        if not isinstance(records_raw, list):
+            records_raw = [data] if (data.get("vendor_name") or data.get("reference_number")) else []
 
-        if vendor and ref_no and amt_str:
+        extracted_list: list[ExtractedInvoiceData] = []
+        for r in records_raw:
+            vendor = r.get("vendor_name")
+            ref_no = r.get("reference_number")
+            amt_str = r.get("total_amount")
+            if not (vendor and ref_no and amt_str):
+                continue
+
             clean_amt = _clean_amount(str(amt_str))
-            if clean_amt is not None:
-                inv_date = _parse_date(data.get("document_date", "")) if data.get("document_date") else None
-                return ExtractedInvoiceData(
-                    vendor_name=str(vendor).strip(),
-                    invoice_number=str(ref_no).strip(),
-                    total_amount=clean_amt,
-                    invoice_date=inv_date,
-                    vendor_gstin=data.get("tax_id"),
-                    currency=data.get("currency", "USD"),
-                    document_type=data.get("document_type", "invoice"),
-                    customer_name=data.get("customer_name"),
-                    summary=data.get("summary"),
-                )
+            if clean_amt is None or clean_amt <= Decimal("0.00"):
+                continue
+
+            inv_date = _parse_date(r.get("document_date", "")) if r.get("document_date") else None
+            due_date = _parse_date(r.get("due_date", "")) if r.get("due_date") else None
+            clean_net = _clean_amount(str(r.get("net_amount", ""))) if r.get("net_amount") else Decimal("0.00")
+            clean_tax = _clean_amount(str(r.get("tax_amount", ""))) if r.get("tax_amount") else Decimal("0.00")
+            clean_paid = _clean_amount(str(r.get("paid_amount", ""))) if r.get("paid_amount") else Decimal("0.00")
+            p_status = str(r.get("payment_status", "unpaid")).lower().replace(" ", "_")
+
+            if clean_paid >= clean_amt and clean_amt > Decimal("0.00"):
+                p_status = "paid"
+            elif clean_paid > Decimal("0.00"):
+                p_status = "partially_paid"
+            elif p_status in ("paid", "completed"):
+                clean_paid = clean_amt
+
+            item = ExtractedInvoiceData(
+                vendor_name=str(vendor).strip(),
+                invoice_number=str(ref_no).strip(),
+                total_amount=clean_amt,
+                invoice_date=inv_date,
+                vendor_gstin=r.get("tax_id"),
+                currency=r.get("currency", "USD"),
+                document_type=detected_type,
+                customer_name=r.get("customer_name"),
+                summary=r.get("description") or data.get("summary"),
+                net_amount=clean_net or Decimal("0.00"),
+                tax_amount=clean_tax or Decimal("0.00"),
+                paid_amount=clean_paid or Decimal("0.00"),
+                payment_status=p_status,
+                due_date=due_date,
+                description=r.get("description"),
+            )
+            extracted_list.append(item)
+
+        if extracted_list:
+            return (extracted_list, detected_type, f"Google Gemini ({model_name})")
+
     except Exception as exc:
         logger.warning("LLM entity extraction fallback to heuristics", exc=str(exc))
 
-    return None
+    return ([], "invoice", None)
 
 
 def parse_csv(content: bytes) -> ParsedDocument:
@@ -429,12 +480,37 @@ def parse_csv(content: bytes) -> ParsedDocument:
 
     full_text = "\n".join(row_texts)
     pages.append((1, full_text))
-    primary_extracted = extracted_invoices[0] if extracted_invoices else None
+
+    if extracted_invoices:
+        primary_extracted = extracted_invoices[0]
+        return ParsedDocument(
+            full_text=full_text,
+            pages=pages,
+            extracted_invoice=primary_extracted,
+            extracted_invoices=extracted_invoices,
+            detected_document_type="invoice",
+            ai_model_used="Standard Table Parser",
+        )
+
+    # If heuristics yielded 0 invoices, try LLM/Gemini extraction on the CSV text
+    ai_records, ai_type, ai_model = extract_with_gemini_or_llm(full_text)
+    if ai_records:
+        return ParsedDocument(
+            full_text=full_text,
+            pages=pages,
+            extracted_invoice=ai_records[0],
+            extracted_invoices=ai_records,
+            detected_document_type=ai_type,
+            ai_model_used=ai_model,
+        )
+
     return ParsedDocument(
         full_text=full_text,
         pages=pages,
-        extracted_invoice=primary_extracted,
-        extracted_invoices=extracted_invoices,
+        extracted_invoice=None,
+        extracted_invoices=[],
+        detected_document_type="csv_table",
+        ai_model_used=None,
     )
 
 
@@ -451,14 +527,16 @@ def parse_pdf(content: bytes) -> ParsedDocument:
 
     full_text = "\n\n".join(full_text_parts)
 
-    # First attempt: Google AI Studio / LLM extraction for flexible non-fixed markups
-    extracted = extract_with_gemini_or_llm(full_text)
-    if extracted is not None:
+    # First attempt: Google AI Studio / Gemini extraction for universal markups
+    ai_records, ai_type, ai_model = extract_with_gemini_or_llm(full_text)
+    if ai_records:
         return ParsedDocument(
             full_text=full_text,
             pages=pages,
-            extracted_invoice=extracted,
-            extracted_invoices=[extracted],
+            extracted_invoice=ai_records[0],
+            extracted_invoices=ai_records,
+            detected_document_type=ai_type,
+            ai_model_used=ai_model,
         )
 
     # Fallback: Robust Multi-Pattern Regex Extraction
@@ -478,6 +556,7 @@ def parse_pdf(content: bytes) -> ParsedDocument:
                 vendor_name = line_clean[:100]
                 break
 
+    extracted = None
     if inv_num_match and amt_match and vendor_name:
         inv_no = inv_num_match.group(1).strip()
         amt_dec = _clean_amount(amt_match.group(1))
@@ -495,11 +574,16 @@ def parse_pdf(content: bytes) -> ParsedDocument:
             )
 
     invoices_list = [extracted] if extracted else []
+    doc_type = extracted.document_type if extracted else _detect_document_type(full_text)
+    model_tag = "Deterministic Heuristics Engine" if extracted else None
+
     return ParsedDocument(
         full_text=full_text,
         pages=pages,
         extracted_invoice=extracted,
         extracted_invoices=invoices_list,
+        detected_document_type=doc_type,
+        ai_model_used=model_tag,
     )
 
 
@@ -511,4 +595,11 @@ def parse_document(filename: str, content: bytes) -> ParsedDocument:
         return parse_pdf(content)
     else:
         txt = content.decode("utf-8", errors="replace")
-        return ParsedDocument(full_text=txt, pages=[(1, txt)], extracted_invoice=None, extracted_invoices=[])
+        return ParsedDocument(
+            full_text=txt,
+            pages=[(1, txt)],
+            extracted_invoice=None,
+            extracted_invoices=[],
+            detected_document_type="plain_text",
+            ai_model_used=None,
+        )

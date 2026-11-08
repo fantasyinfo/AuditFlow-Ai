@@ -1,7 +1,7 @@
 import enum
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, ForeignKey, Index, String, Uuid
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -52,6 +52,10 @@ class Document(Base):
         nullable=True,
         index=True,
     )
+    extracted_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    extraction_summary: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    detected_document_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    ai_model_used: Mapped[str | None] = mapped_column(String(100), nullable=True)
     error_message: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

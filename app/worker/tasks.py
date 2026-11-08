@@ -145,8 +145,27 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
                     tenant_id=tenant_id,
                 )
 
-        # Step 8: Mark document processing complete
+        # Step 8: Mark document processing complete and record extraction diagnostics
         doc.status = DocumentStatus.DONE.value
+        doc.extracted_count = len(invoices_to_process)
+        doc.detected_document_type = getattr(parsed, "detected_document_type", None) or doc.type
+        doc.ai_model_used = getattr(parsed, "ai_model_used", None) or ("Heuristic Parser" if len(invoices_to_process) > 0 else None)
+
+        if len(invoices_to_process) > 0:
+            total_sum = sum(i.total_amount for i in invoices_to_process)
+            doc.extraction_summary = (
+                f"Successfully extracted {len(invoices_to_process)} commercial record(s) "
+                f"totaling ₹{total_sum:.2f} using {doc.ai_model_used or 'parser'}."
+            )
+            doc.error_message = None
+        else:
+            doc.extraction_summary = "0 commercial records extracted."
+            doc.error_message = (
+                "No valid invoice, quotation, or PO line items could be recognized in this file. "
+                "Ensure the document contains visible vendor name, invoice reference number, and total amount. "
+                "Connect your Google AI Studio Gemini API key to enable universal understanding on arbitrary non-standard formats."
+            )
+
         session.commit()
 
         logger.info(
@@ -154,6 +173,7 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
             document_id=document_id,
             chunks_count=len(chunks),
             invoices_extracted_count=len(invoices_to_process),
+            model_used=doc.ai_model_used,
             tenant_id=tenant_id,
         )
         return {

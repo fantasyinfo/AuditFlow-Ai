@@ -107,7 +107,8 @@ export const api = {
   },
 
   invoices: {
-    list: (limit = 50) => request(`/invoices?limit=${limit}`),
+    list: (limit = 50, documentId = "") =>
+      request(`/invoices?limit=${limit}${documentId ? `&document_id=${documentId}` : ""}`),
     get: (id) => request(`/invoices/${id}`),
     delete: (id) =>
       request(`/invoices/${id}`, {
@@ -206,6 +207,16 @@ export const api = {
     linkDocument: (projectId, documentId) =>
       request(`/projects/${projectId}/link-document/${documentId}`, {
         method: "POST",
+      }),
+  },
+
+  system: {
+    getAiStatus: () => request("/system/ai-status"),
+    configureAi: (geminiApiKey, model = "gemini-2.0-flash") =>
+      request("/system/ai-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gemini_api_key: geminiApiKey, model }),
       }),
   },
 };

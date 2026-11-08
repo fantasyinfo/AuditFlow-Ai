@@ -18,6 +18,7 @@ from app.routes.health import router as health_router
 from app.routes.invoices import router as invoices_router
 from app.routes.projects import router as projects_router
 from app.routes.rules import router as rules_router
+from app.routes.system import router as system_router
 from app.routes.ui import router as ui_router
 
 settings = get_settings()
@@ -62,6 +63,7 @@ app.include_router(invoices_router)
 app.include_router(findings_router)
 app.include_router(rules_router)
 app.include_router(agent_router)
+app.include_router(system_router)
 app.include_router(ui_router)
 
 # Mount built Vite React Admin Panel if present

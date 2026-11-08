@@ -20,6 +20,7 @@ router = APIRouter(prefix="/invoices", tags=["Invoices"])
 async def list_invoices(
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_db)],
+    document_id: uuid.UUID | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[InvoiceRead]:
@@ -27,6 +28,7 @@ async def list_invoices(
     invoices = await InvoiceService.list_invoices(
         session=session,
         tenant_id=current_user.tenant_id,
+        document_id=document_id,
         limit=limit,
         offset=offset,
     )

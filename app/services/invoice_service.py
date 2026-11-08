@@ -11,13 +11,18 @@ class InvoiceService:
     async def list_invoices(
         session: AsyncSession,
         tenant_id: uuid.UUID,
+        document_id: Optional[uuid.UUID] = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Invoice]:
-        """List all invoices belonging strictly to the caller's tenant."""
+        """List all invoices belonging strictly to the caller's tenant, optionally filtered by document."""
+        conditions = [Invoice.tenant_id == tenant_id]
+        if document_id:
+            conditions.append(Invoice.document_id == document_id)
+
         query = (
             select(Invoice)
-            .where(Invoice.tenant_id == tenant_id)
+            .where(*conditions)
             .order_by(Invoice.created_at.desc())
             .limit(limit)
             .offset(offset)
