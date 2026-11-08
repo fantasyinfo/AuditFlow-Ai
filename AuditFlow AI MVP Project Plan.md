@@ -483,6 +483,9 @@ Indexes on `(tenant_id, created_at)` for every table, a unique index on `(tenant
 - [x] Top-level `README.md` with 5-minute quick start and measured performance numbers. *(Tested & Verified)*
 - [x] Custom Rules & Policy Builder Engine with step-by-step guide and dynamic reason templates. *(Tested & Verified)*
 - [x] Pre-configured Demo Document Library with live formatted previews and 1-click test ingestion in UI. *(Tested & Verified)*
+- [x] Audit Projects & Quotation Baselines: Contracted budget caps, over-logged expenditure calculations, and cumulative project monitoring. *(Tested & Verified)*
+- [x] Financial Reconciliation Engine: Real-time Quotation vs Invoicing variance (% and amount), GST removal / Net View dissection, and TDS withholding simulation. *(Tested & Verified)*
+- [x] Calm, Industry-Standard Enterprise Admin UI: Vite + React + Tailwind with robust dual light/dark mode, uncluttered sidebar, and intuitive project switcher. *(Tested & Verified)*
 
 **MVP acceptance checklist**
 

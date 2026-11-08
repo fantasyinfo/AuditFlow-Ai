@@ -56,3 +56,21 @@ async def get_invoice(
         )
     return InvoiceRead.model_validate(invoice)
 
+
+@router.delete(
+    "/{invoice_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an extracted invoice and its findings",
+)
+async def delete_invoice(
+    invoice_id: uuid.UUID,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """Delete an invoice entry and its findings strictly scoped to tenant."""
+    await InvoiceService.delete_invoice(
+        session=session,
+        tenant_id=current_user.tenant_id,
+        invoice_id=invoice_id,
+    )
+

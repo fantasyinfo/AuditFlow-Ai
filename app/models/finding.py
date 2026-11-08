@@ -40,6 +40,12 @@ class Finding(Base):
         nullable=False,
         index=True,
     )
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("projects.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     rule: Mapped[str] = mapped_column(String(100), nullable=False)
     severity: Mapped[str] = mapped_column(String(50), default=FindingSeverity.MEDIUM.value, nullable=False)
     reason: Mapped[str] = mapped_column(String(1024), nullable=False)
@@ -53,9 +59,11 @@ class Finding(Base):
 
     tenant: Mapped["Tenant"] = relationship("Tenant")
     invoice: Mapped["Invoice"] = relationship("Invoice")
+    project: Mapped["Project | None"] = relationship("Project", back_populates="findings")
 
     __table_args__ = (
         Index("ix_findings_tenant_created", "tenant_id", "created_at"),
         Index("ix_findings_tenant_status", "tenant_id", "status"),
         Index("ix_findings_tenant_rule", "tenant_id", "rule"),
+        Index("ix_findings_tenant_project", "tenant_id", "project_id"),
     )

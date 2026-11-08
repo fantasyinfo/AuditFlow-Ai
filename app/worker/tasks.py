@@ -83,6 +83,7 @@ def process_document(self, document_id: str, tenant_id: str) -> dict[str, str]:
                     invoice_row = Invoice(
                         tenant_id=tenant_uuid,
                         document_id=doc_uuid,
+                        project_id=doc.project_id,
                         vendor_name=inv.vendor_name,
                         vendor_gstin=inv.vendor_gstin,
                         invoice_number=inv.invoice_number,

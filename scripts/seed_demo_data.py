@@ -79,7 +79,43 @@ async def seed_demo_data(base_url="http://localhost:8000"):
         )
         print("Configured 2 custom rules: [director_approval_limit, strict_gstin_mandatory]")
 
-        # 3. Seed 50 Commercial Invoices with planted anomalies
+        # 3. Create 2 Audit Projects with Quotation Baselines
+        print("\nConfiguring audit project workspaces with quotation baselines...")
+        p1_res = await client.post(
+            "/projects",
+            headers=headers,
+            json={
+                "name": "TechNova ERP Cloud Migration",
+                "code": "PRJ-TECHNOVA-ERP",
+                "description": "Master Service Agreement & hardware/cloud migration procurement engagement.",
+                "vendor_name": "TechNova Global Ltd",
+                "vendor_gstin": "06AAACT0000Q1Z1",
+                "budget_amount": "1500000.00",
+                "budget_currency": "INR",
+                "gst_rate_percent": "18.00",
+                "over_billing_tolerance_percent": "5.00",
+                "single_invoice_cap": "500000.00",
+            },
+        )
+        p2_res = await client.post(
+            "/projects",
+            headers=headers,
+            json={
+                "name": "Apex Global Fleet Logistics 2026",
+                "code": "PRJ-APEX-LOGISTICS",
+                "description": "Corporate logistics, freight forwarding and retainer contract.",
+                "vendor_name": "Apex Logistics Corp",
+                "vendor_gstin": "29AAACT9999Q1Z9",
+                "budget_amount": "500000.00",
+                "budget_currency": "INR",
+                "gst_rate_percent": "18.00",
+                "over_billing_tolerance_percent": "5.00",
+                "single_invoice_cap": "200000.00",
+            },
+        )
+        print("Created 2 audit projects: [TechNova ERP Cloud Migration, Apex Global Fleet Logistics 2026]")
+
+        # 4. Seed 50 Commercial Invoices with planted anomalies
         print("\nUploading 50 commercial documents across all 4 categories...")
         base_date = date.today() - timedelta(days=60)
         uploaded_count = 0

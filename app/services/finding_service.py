@@ -89,3 +89,16 @@ class FindingService:
         )
 
         return finding
+
+    @staticmethod
+    async def delete_finding(
+        session: AsyncSession,
+        tenant_id: uuid.UUID,
+        finding_id: uuid.UUID,
+    ) -> bool:
+        finding = await FindingService.get_finding(session, tenant_id, finding_id)
+        if not finding:
+            return True
+        await session.delete(finding)
+        await session.commit()
+        return True

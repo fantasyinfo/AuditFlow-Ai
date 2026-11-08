@@ -46,6 +46,12 @@ class Document(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("projects.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     error_message: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -55,8 +61,10 @@ class Document(Base):
 
     tenant: Mapped["Tenant"] = relationship("Tenant")
     uploader: Mapped["User"] = relationship("User")
+    project: Mapped["Project | None"] = relationship("Project", back_populates="documents")
 
     __table_args__ = (
         Index("ix_documents_tenant_created", "tenant_id", "created_at"),
         Index("ix_documents_tenant_status", "tenant_id", "status"),
+        Index("ix_documents_tenant_project", "tenant_id", "project_id"),
     )

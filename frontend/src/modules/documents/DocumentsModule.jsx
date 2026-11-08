@@ -17,18 +17,29 @@ import {
   BookOpen,
   Receipt,
   FileCheck,
+  FolderKanban,
+  Trash2,
 } from "lucide-react";
 import { api } from "../../api/client";
 import { DEMO_DOCUMENTS } from "../../data/demoDocuments";
+import { useProject } from "../../context/ProjectContext";
 
-export default function DocumentsModule() {
+export default function DocumentsModule({ onNavigate }) {
+  const { projects, selectedProjectId } = useProject();
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [docType, setDocType] = useState("invoice");
+  const [targetProjectId, setTargetProjectId] = useState(selectedProjectId || "");
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState(null);
+
+  useEffect(() => {
+    if (selectedProjectId) {
+      setTargetProjectId(selectedProjectId);
+    }
+  }, [selectedProjectId]);
 
   // Demo Document Library & Preview State
   const [showDemoLibrary, setShowDemoLibrary] = useState(false);
@@ -69,7 +80,7 @@ export default function DocumentsModule() {
     setUploadMessage(null);
 
     try {
-      const res = await api.documents.upload(selectedFile, docType, idempotencyKey);
+      const res = await api.documents.upload(selectedFile, docType, idempotencyKey, targetProjectId);
       setUploadMessage({
         type: "success",
         text: `Uploaded "${res.filename}" (ID: ${res.id}). Queued in Redis for parsing & embeddings!`,
@@ -86,13 +97,25 @@ export default function DocumentsModule() {
     }
   };
 
+  const handleDeleteDocument = async (docId, filename) => {
+    if (!window.confirm(`Are you sure you want to delete "${filename}" and all its extracted chunks?`)) {
+      return;
+    }
+    try {
+      await api.documents.delete(docId);
+      await fetchDocuments();
+    } catch (err) {
+      alert("Failed to delete document: " + err.message);
+    }
+  };
+
   const handleIngestDemoDoc = async (demo) => {
     setIsUploading(true);
     setUploadMessage(null);
     try {
       const blob = new Blob([demo.rawContent], { type: "text/csv" });
       const file = new File([blob], demo.filename, { type: "text/csv" });
-      const res = await api.documents.upload(file, demo.type, `idemp_demo_${Date.now()}`);
+      const res = await api.documents.upload(file, demo.type, `idemp_demo_${Date.now()}`, targetProjectId);
       setUploadMessage({
         type: "success",
         text: `Ingested demo document "${demo.title}" (${res.id}). Celery worker is processing rules!`,
@@ -181,6 +204,26 @@ export default function DocumentsModule() {
                 <option value="agreement">Agreement / Contract / SOW</option>
                 <option value="purchase_order">Purchase Order (PO)</option>
                 <option value="other">Other Commercial File</option>
+              </select>
+            </div>
+
+            {/* Target Project Assignment */}
+            <div className="md:col-span-3 space-y-1">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <FolderKanban className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
+                <span>Assign to Audit Project Baseline (Recommended)</span>
+              </label>
+              <select
+                value={targetProjectId}
+                onChange={(e) => setTargetProjectId(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg py-2 px-3 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-brand-500"
+              >
+                <option value="">No Project Assigned (Global Workspace)</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.code}) — Vendor: {p.vendor_name} (Cap: ₹{p.budget_amount})
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -315,13 +358,23 @@ export default function DocumentsModule() {
                       {new Date(d.created_at).toLocaleTimeString()}
                     </td>
                     <td className="py-2.5 px-3 text-right">
-                      <button
-                        onClick={() => openChunksModal(d)}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-300 border border-slate-200 dark:border-slate-700 rounded text-[11px] font-medium transition inline-flex items-center gap-1.5"
-                      >
-                        <Layers className="w-3 h-3 text-brand-600 dark:text-brand-400" />
-                        <span>Inspect Chunks</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openChunksModal(d)}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-300 border border-slate-200 dark:border-slate-700 rounded text-[11px] font-medium transition inline-flex items-center gap-1.5"
+                          title="Inspect Chunks"
+                        >
+                          <Layers className="w-3 h-3 text-brand-600 dark:text-brand-400" />
+                          <span>Chunks</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDocument(d.id, d.filename)}
+                          className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 transition"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

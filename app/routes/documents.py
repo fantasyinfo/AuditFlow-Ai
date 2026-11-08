@@ -27,6 +27,7 @@ async def upload_document(
     current_user: Annotated[CurrentUser, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_db)],
     doc_type: Annotated[str, Form(description="Document type")] = "invoice",
+    project_id: Annotated[Optional[uuid.UUID], Form(description="Associated Project ID")] = None,
     idempotency_key: Annotated[Optional[str], Header(alias="Idempotency-Key")] = None,
 ) -> JSONResponse:
     """Accept and store document, enqueue processing task, and return 202 immediately."""
@@ -50,6 +51,7 @@ async def upload_document(
         user_id=current_user.id,
         file=file,
         doc_type=doc_type,
+        project_id=project_id,
     )
 
     body = response_data.model_dump(mode="json")
@@ -137,4 +139,22 @@ async def list_documents(
         offset=offset,
     )
     return [DocumentRead.model_validate(d) for d in docs]
+
+
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an uploaded document and its chunks",
+)
+async def delete_document(
+    document_id: uuid.UUID,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """Delete document row, underlying file, and vector chunks strictly within caller's tenant."""
+    await DocumentService.delete_document(
+        session=session,
+        tenant_id=current_user.tenant_id,
+        document_id=document_id,
+    )
 

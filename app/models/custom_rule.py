@@ -32,6 +32,12 @@ class CustomRule(Base):
         default="Invoice violates custom policy rule {name}.",
         nullable=False,
     )
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -46,10 +52,12 @@ class CustomRule(Base):
     )
 
     tenant: Mapped["Tenant"] = relationship("Tenant")
+    project: Mapped["Project | None"] = relationship("Project", back_populates="custom_rules")
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "code", name="uq_custom_rules_tenant_code"),
         Index("ix_custom_rules_tenant_created", "tenant_id", "created_at"),
         Index("ix_custom_rules_tenant_active", "tenant_id", "is_active"),
+        Index("ix_custom_rules_tenant_project", "tenant_id", "project_id"),
     )
 

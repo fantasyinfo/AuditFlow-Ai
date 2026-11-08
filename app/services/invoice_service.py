@@ -39,3 +39,23 @@ class InvoiceService:
         result = await session.execute(query)
         return result.scalars().first()
 
+    @staticmethod
+    async def delete_invoice(
+        session: AsyncSession,
+        tenant_id: uuid.UUID,
+        invoice_id: uuid.UUID,
+    ) -> bool:
+        """Delete an invoice and its cascaded findings strictly within tenant."""
+        query = select(Invoice).where(
+            Invoice.id == invoice_id,
+            Invoice.tenant_id == tenant_id,
+        )
+        result = await session.execute(query)
+        invoice = result.scalars().first()
+        if not invoice:
+            return True
+
+        await session.delete(invoice)
+        await session.commit()
+        return True
+

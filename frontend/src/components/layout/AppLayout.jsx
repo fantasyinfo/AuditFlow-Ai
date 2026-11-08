@@ -17,7 +17,7 @@ export default function AppLayout({ currentModule, onSelectModule, moduleTitle, 
         />
 
         {/* Scrollable Viewport */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-100/70 dark:bg-gradient-to-b dark:from-slate-900/20 dark:to-slate-950 transition-colors">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-100/70 dark:bg-slate-950 transition-colors">
           <div className="max-w-7xl mx-auto space-y-6">
             {children}
           </div>

@@ -35,6 +35,28 @@ class Invoice(Base):
         Numeric(18, 2),
         nullable=False,
     )
+    tax_amount: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(18, 2),
+        default=decimal.Decimal("0.00"),
+        nullable=False,
+    )
+    net_amount: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(18, 2),
+        default=decimal.Decimal("0.00"),
+        nullable=False,
+    )
+    paid_amount: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(18, 2),
+        default=decimal.Decimal("0.00"),
+        nullable=False,
+    )
+    payment_status: Mapped[str] = mapped_column(String(50), default="unpaid", nullable=False)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("projects.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     po_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True),
         ForeignKey("purchase_orders.id", ondelete="SET NULL"),
@@ -50,8 +72,10 @@ class Invoice(Base):
     tenant: Mapped["Tenant"] = relationship("Tenant")
     document: Mapped["Document"] = relationship("Document")
     purchase_order: Mapped["PurchaseOrder | None"] = relationship("PurchaseOrder")
+    project: Mapped["Project | None"] = relationship("Project", back_populates="invoices")
 
     __table_args__ = (
         Index("ix_invoices_tenant_created", "tenant_id", "created_at"),
+        Index("ix_invoices_tenant_project", "tenant_id", "project_id"),
         UniqueConstraint("tenant_id", "vendor_name", "invoice_number", name="uq_invoices_tenant_vendor_number"),
     )

@@ -103,15 +103,15 @@ export default function AssistantModule() {
       {/* Assistant Header */}
       <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/25">
-            <Sparkles className="w-5 h-5 text-purple-200" />
+          <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/25">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 AI Audit Assistant
               </h2>
-              <span className="text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded font-mono font-semibold">
+              <span className="text-[10px] bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20 px-2 py-0.5 rounded font-mono font-semibold">
                 Google AI Studio Gemini + RAG
               </span>
             </div>
@@ -146,7 +146,7 @@ export default function AssistantModule() {
             key={idx}
             onClick={() => handleSend(p.query)}
             disabled={isLoading}
-            className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800/70 hover:bg-purple-50 dark:hover:bg-purple-900/40 text-slate-700 dark:text-purple-200 border border-slate-200 dark:border-slate-700/80 hover:border-purple-400 dark:hover:border-purple-500/40 text-[11px] font-medium transition shrink-0 shadow-sm"
+            className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800/70 hover:bg-brand-50 dark:hover:bg-brand-900/40 text-slate-700 dark:text-brand-200 border border-slate-200 dark:border-slate-700/80 hover:border-brand-400 dark:hover:border-brand-500/40 text-[11px] font-medium transition shrink-0 shadow-sm"
           >
             {p.label}
           </button>
@@ -163,7 +163,7 @@ export default function AssistantModule() {
               className={`flex items-start gap-3 ${isUser ? "justify-end" : "justify-start"}`}
             >
               {!isUser && (
-                <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-600/30 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-purple-700 dark:text-purple-300 shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/40 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0 mt-0.5">
                   <Bot className="w-4 h-4" />
                 </div>
               )}
@@ -179,7 +179,7 @@ export default function AssistantModule() {
               >
                 {!isUser && (
                   <div className="flex items-center justify-between gap-3 pb-1 border-b border-slate-200 dark:border-slate-800/60 text-[10px]">
-                    <span className="font-semibold text-purple-700 dark:text-purple-400 flex items-center gap-1">
+                    <span className="font-semibold text-brand-700 dark:text-brand-400 flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
                       <span>AuditFlow Intelligence</span>
                     </span>
@@ -209,7 +209,7 @@ export default function AssistantModule() {
                     {m.citations.map((cite, cIdx) => (
                       <span
                         key={cIdx}
-                        className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-mono text-[10px] shadow-sm font-medium"
+                        className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 font-mono text-[10px] shadow-sm font-medium"
                       >
                         {cite}
                       </span>
@@ -223,13 +223,13 @@ export default function AssistantModule() {
 
         {isLoading && (
           <div className="flex items-center gap-3 text-slate-400 text-xs py-2">
-            <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-600/30 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-purple-700 dark:text-purple-300 shrink-0 animate-pulse">
+            <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/40 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0 animate-pulse">
               <Bot className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-xl text-purple-700 dark:text-purple-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" />
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.2s]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:0.4s]" />
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-xl text-brand-700 dark:text-brand-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce" />
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce [animation-delay:0.2s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce [animation-delay:0.4s]" />
               <span className="text-[11px] ml-1 text-slate-600 dark:text-slate-400">
                 Retrieving vector chunks and executing Google Gemini tools...
               </span>

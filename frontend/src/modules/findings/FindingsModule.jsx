@@ -10,6 +10,7 @@ import {
   Clock,
   RefreshCw,
   MessageSquare,
+  Trash2,
 } from "lucide-react";
 import { api } from "../../api/client";
 
@@ -60,6 +61,16 @@ export default function FindingsModule() {
       alert(err.message || "Failed to update finding status");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteFinding = async (findingId, rule) => {
+    if (!window.confirm(`Are you sure you want to delete finding "${rule}"?`)) return;
+    try {
+      await api.findings.delete(findingId);
+      fetchFindings();
+    } catch (err) {
+      alert("Failed to delete finding: " + err.message);
     }
   };
 
@@ -181,26 +192,35 @@ export default function FindingsModule() {
                         {new Date(f.created_at).toLocaleTimeString()}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {f.status === "open" ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => openReviewModal(f, "confirmed")}
-                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-semibold transition"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => openReviewModal(f, "dismissed")}
-                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-[11px] font-semibold transition"
-                            >
-                              Dismiss
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">
-                            Reviewed
-                          </span>
-                        )}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {f.status === "open" ? (
+                            <>
+                              <button
+                                onClick={() => openReviewModal(f, "confirmed")}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-semibold transition"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => openReviewModal(f, "dismissed")}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-[11px] font-semibold transition"
+                              >
+                                Dismiss
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 italic pr-1">
+                              Reviewed
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleDeleteFinding(f.id, f.rule)}
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:border-rose-800 transition"
+                            title="Delete Finding"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

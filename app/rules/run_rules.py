@@ -8,6 +8,7 @@ from app.rules.custom_rule_evaluator import evaluate_custom_rules
 from app.rules.duplicate_invoice import check_duplicate_invoice
 from app.rules.gstin_check import check_invalid_gstin
 from app.rules.missing_evidence import check_missing_evidence
+from app.rules.project_rules import check_project_budget_and_caps
 from app.rules.unusual_amount import check_unusual_amount
 from app.schemas.finding import FindingCreate
 
@@ -47,6 +48,7 @@ def run_all_rules(invoice: Invoice, db: Session) -> list[Finding]:
                     finding_row = Finding(
                         tenant_id=invoice.tenant_id,
                         invoice_id=invoice.id,
+                        project_id=invoice.project_id,
                         rule=result.rule,
                         severity=result.severity,
                         reason=result.reason,
@@ -65,7 +67,43 @@ def run_all_rules(invoice: Invoice, db: Session) -> list[Finding]:
         except Exception as exc:
             logger.exception("Error executing audit rule", rule=rule_name, exc=str(exc))
 
-    # 2. Run tenant-defined custom rules
+    # 2. Run project-level quotation caps and over-billing rules
+    try:
+        project_findings = check_project_budget_and_caps(invoice, db)
+        for p_res in project_findings:
+            existing = (
+                db.query(Finding)
+                .filter(
+                    Finding.tenant_id == invoice.tenant_id,
+                    Finding.invoice_id == invoice.id,
+                    Finding.rule == p_res.rule,
+                )
+                .first()
+            )
+            if not existing:
+                finding_row = Finding(
+                    tenant_id=invoice.tenant_id,
+                    invoice_id=invoice.id,
+                    project_id=invoice.project_id,
+                    rule=p_res.rule,
+                    severity=p_res.severity,
+                    reason=p_res.reason,
+                    evidence=p_res.evidence,
+                    status="open",
+                )
+                db.add(finding_row)
+                created_findings.append(finding_row)
+                logger.info(
+                    "Project audit rule finding triggered",
+                    rule=p_res.rule,
+                    severity=p_res.severity,
+                    invoice_id=str(invoice.id),
+                    tenant_id=str(invoice.tenant_id),
+                )
+    except Exception as exc:
+        logger.exception("Error evaluating project rules", invoice_id=str(invoice.id), exc=str(exc))
+
+    # 3. Run tenant-defined custom rules
     try:
         custom_results: list[FindingCreate] = evaluate_custom_rules(invoice, db)
         for c_res in custom_results:
@@ -82,6 +120,7 @@ def run_all_rules(invoice: Invoice, db: Session) -> list[Finding]:
                 finding_row = Finding(
                     tenant_id=invoice.tenant_id,
                     invoice_id=invoice.id,
+                    project_id=invoice.project_id,
                     rule=c_res.rule,
                     severity=c_res.severity,
                     reason=c_res.reason,

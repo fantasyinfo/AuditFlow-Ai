@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { api } from "../../api/client";
 
-export default function AuditLogsModule() {
+export default function AuditLogsModule({ onNavigate }) {
   const [logs, setLogs] = useState([]);
   const [selectedLog, setSelectedLog] = useState(null);
   const [isLoading, setIsLoading] = useState(true);

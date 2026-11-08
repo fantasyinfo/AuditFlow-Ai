@@ -71,35 +71,35 @@ export default function DashboardModule({ onNavigate }) {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & Quick Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-brand-900/80 via-slate-900 to-slate-900 dark:from-brand-950/80 dark:via-slate-900 dark:to-slate-900 border border-brand-500/30 shadow-xl shadow-brand-950/20 text-white">
+      {/* Calm Header & Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
-              Executive AP Command Center
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30">
+              Executive AP Overview
             </span>
           </div>
-          <h2 className="text-xl font-bold text-white tracking-tight">
-            Accounts Payable Audit & Anomaly Detection
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+            Accounts Payable Audit & Risk Monitoring
           </h2>
-          <p className="text-xs text-slate-300 dark:text-slate-400 max-w-xl">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Real-time multi-tenant monitoring across invoices, quotations, agreements, and purchase orders.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => onNavigate("documents")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-brand-600/30"
+            className="px-3.5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow-sm"
           >
             <FileText className="w-4 h-4" />
             <span>Upload Document</span>
           </button>
           <button
             onClick={() => onNavigate("assistant")}
-            className="px-4 py-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-lg text-xs font-semibold transition flex items-center gap-2"
+            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow-sm"
           >
-            <Sparkles className="w-4 h-4 text-purple-400" />
+            <Sparkles className="w-4 h-4 text-brand-500" />
             <span>AI Assistant</span>
           </button>
         </div>

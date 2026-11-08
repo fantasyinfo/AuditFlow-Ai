@@ -19,6 +19,9 @@ import {
   Sliders,
   Plus,
   FileCode,
+  FolderKanban,
+  Scale,
+  Calculator,
 } from "lucide-react";
 
 export default function DocsModule({ onNavigate }) {
@@ -27,30 +30,39 @@ export default function DocsModule({ onNavigate }) {
   const steps = [
     {
       num: "01",
-      title: "Ingest Commercial Documents",
-      desc: "Upload invoices, quotations, contracts, or purchase orders in PDF or CSV format. Any global layout, template, or currency ($ USD, € EUR, £ GBP, ₹ INR) is supported.",
-      actionText: "Go to Ingestion",
-      targetModule: "documents",
-      icon: FileText,
-      color: "from-brand-600 to-indigo-600",
+      title: "Establish Project & Quotation Baseline",
+      desc: "Create an audit project for your vendor engagement. Set the agreed contract quotation budget, GST rate %, single invoice caps, and over-billing tolerance.",
+      actionText: "Go to Projects",
+      targetModule: "projects",
+      icon: FolderKanban,
+      color: "from-blue-600 to-sky-600",
     },
     {
       num: "02",
-      title: "Automated Rules & Anomaly Detection",
-      desc: "Background Celery workers extract fields via Gemini and immediately evaluate 5 deterministic audit rules (Duplicates, Mismatches, Missing POs, Tax IDs, Spikes).",
+      title: "Ingest Commercial Documents",
+      desc: "Upload signed contracts, legal SOWs, vendor quotations, POs, and incoming invoices in PDF or CSV format. Background Celery workers parse and extract fields.",
+      actionText: "Go to Ingestion",
+      targetModule: "documents",
+      icon: FileText,
+      color: "from-brand-600 to-blue-600",
+    },
+    {
+      num: "03",
+      title: "Reconcile Budget & Remove GST",
+      desc: "Perform 3-way reconciliation: track over-logged %, remove GST to inspect pure service costs, simulate TDS deductions, and track remaining balance to pay.",
+      actionText: "Open Reconciliation",
+      targetModule: "reconciliation",
+      icon: Scale,
+      color: "from-emerald-600 to-teal-600",
+    },
+    {
+      num: "04",
+      title: "Review Audit Findings & Verify with AI",
+      desc: "Inspect duplicate invoices, quotation cap breaches, and price mismatches. Confirm or dismiss findings with reviewer notes, and query documents with citations.",
       actionText: "Review Findings",
       targetModule: "findings",
       icon: AlertTriangle,
       color: "from-amber-600 to-orange-600",
-    },
-    {
-      num: "03",
-      title: "Investigate with AI Audit Assistant",
-      desc: "Ask plain-English audit questions. The agent searches pgvector document chunks, checks findings, and answers with mandatory verifiable citations.",
-      actionText: "Open AI Assistant",
-      targetModule: "assistant",
-      icon: Bot,
-      color: "from-purple-600 to-pink-600",
     },
   ];
 
@@ -67,26 +79,48 @@ export default function DocsModule({ onNavigate }) {
         "Check this screen daily to spot high-severity alerts before releasing invoice payments to vendors.",
     },
     {
+      id: "projects",
+      name: "1. Projects & Baselines",
+      icon: FolderKanban,
+      badge: "Step 1: Baseline",
+      summary: "Vendor engagement workspaces with quotation budget baselines and caps.",
+      whatItDoes:
+        "Organizes documents, contracts, and invoices by vendor project. Establishes the initial quotation ceiling, expected GST tax rate, single invoice caps, and over-billing tolerance thresholds.",
+      howToUse:
+        "Click '+ Create Audit Project' or use the 1-click presets (e.g. TechNova ERP) to establish your commercial baseline before invoices arrive.",
+    },
+    {
       id: "documents",
-      name: "Document Ingestion",
+      name: "2. Document Ingestion",
       icon: FileText,
-      badge: "Redis + pgvector",
+      badge: "Step 2: Ingestion",
       summary: "Universal drag-and-drop file ingestion and asynchronous queueing.",
       whatItDoes:
         "Accepts commercial PDFs and CSVs, returns an instant 202 Accepted, and processes files in the background via Celery. Splits text into chunks with page numbers and computes 1536-dimensional vector embeddings.",
       howToUse:
-        "Select your file, choose its category (Invoice, Quote, Agreement, PO), and click 'Upload & Enqueue'. Use 'Inspect Chunks' to view vector embeddings.",
+        "Select your file, assign it to an Audit Project, choose its category (Invoice, Quote, Agreement, PO), and click 'Upload & Enqueue'.",
     },
     {
       id: "invoices",
-      name: "Commercial Records",
+      name: "3. Commercial Records",
       icon: Receipt,
-      badge: "Gemini Extraction",
-      summary: "Structured financial catalog extracted from non-fixed layouts.",
+      badge: "Step 3: Line Items",
+      summary: "Structured financial catalog extracted with instant GST removal tool.",
       whatItDoes:
-        "Uses Google AI Studio (Gemini) to dynamically detect vendor names, invoice numbers, dates, amounts, taxes, and PO links without rigid regex or fixed templates.",
+        "Uses Google AI Studio (Gemini) to dynamically detect vendor names, invoice numbers, dates, amounts, taxes, and PO links. Includes a 1-click 'Remove GST' tool to inspect pure goods/services payable.",
       howToUse:
-        "Search by vendor or invoice number. Click on any invoice row to open the Detail Drawer and inspect associated audit findings.",
+        "Search by vendor or invoice number. Click 'Remove GST' to view net baseline amounts separate from tax remittance.",
+    },
+    {
+      id: "reconciliation",
+      name: "4. Budget Reconciliation",
+      icon: Scale,
+      badge: "Step 4: Audit Math",
+      summary: "Quotation vs Invoices: Over/under-logging % and Paid vs Left tracker.",
+      whatItDoes:
+        "Deterministic reconciliation comparing cumulative invoice totals against initial quotations. Calculates exact over-logged percentages, strips GST, simulates TDS deductions, and records payments against invoices.",
+      howToUse:
+        "Select your project from the top dropdown to view burn-rate progress, over/under-logged status, and click 'Record Payment' to disburse funds.",
     },
     {
       id: "findings",
@@ -180,14 +214,14 @@ export default function DocsModule({ onNavigate }) {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-brand-900/40 via-purple-900/20 to-slate-900/60 dark:from-brand-950/70 dark:via-purple-950/40 dark:to-slate-900 border border-brand-500/20 shadow-xl space-y-3">
+      <div className="p-5 md:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 transition-colors">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-400 dark:text-brand-300 border border-brand-500/30 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5" />
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30 flex items-center gap-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
             <span>AuditFlow User Guide & Manual</span>
           </span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           How AuditFlow AI Protects Your Organization
         </h1>
         <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
@@ -204,7 +238,7 @@ export default function DocsModule({ onNavigate }) {
                 : "bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-brand-500"
             }`}
           >
-            Overview & 3-Step Guide
+            Overview & 4-Step Pipeline
           </button>
           <button
             onClick={() => setActiveTab("modules")}

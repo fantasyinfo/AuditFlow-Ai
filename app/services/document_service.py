@@ -24,6 +24,7 @@ class DocumentService:
         user_id: uuid.UUID,
         file: UploadFile,
         doc_type: str = DocumentType.INVOICE.value,
+        project_id: Optional[uuid.UUID] = None,
     ) -> DocumentUploadResponse:
         filename = file.filename or "unnamed_document"
         _, ext = os.path.splitext(filename.lower())
@@ -57,6 +58,7 @@ class DocumentService:
             status=DocumentStatus.QUEUED.value,
             storage_path=storage_path,
             created_by=user_id,
+            project_id=project_id,
         )
         session.add(doc)
         await session.commit()
@@ -103,4 +105,30 @@ class DocumentService:
         )
         result = await session.execute(query)
         return list(result.scalars().all())
+
+    @staticmethod
+    async def delete_document(
+        session: AsyncSession,
+        tenant_id: uuid.UUID,
+        document_id: uuid.UUID,
+    ) -> bool:
+        """Delete document, related file on disk, and cascade DB rows strictly within tenant."""
+        query = select(Document).where(
+            Document.id == document_id,
+            Document.tenant_id == tenant_id,
+        )
+        result = await session.execute(query)
+        doc = result.scalars().first()
+        if not doc:
+            return True
+
+        if doc.storage_path and os.path.exists(doc.storage_path):
+            try:
+                os.remove(doc.storage_path)
+            except OSError:
+                pass
+
+        await session.delete(doc)
+        await session.commit()
+        return True
 

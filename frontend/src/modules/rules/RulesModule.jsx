@@ -175,18 +175,18 @@ export default function RulesModule() {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-brand-900/60 via-purple-900/40 to-slate-900 border border-brand-500/20 shadow-xl space-y-4">
+      {/* Calm Header */}
+      <div className="p-5 md:p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 transition-colors">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 flex items-center gap-1.5 w-fit">
-              <Sliders className="w-3.5 h-3.5 text-brand-400" />
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30 flex items-center gap-1.5 w-fit">
+              <Sliders className="w-3.5 h-3.5 text-brand-500" />
               <span>Deterministic Audit Rules Engine</span>
             </span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               Audit Rules & Tenant Policy Builder
             </h1>
-            <p className="text-xs md:text-sm text-slate-300 max-w-2xl">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-2xl">
               AuditFlow evaluates deterministic rules in background Celery workers on every document. Create custom threshold and compliance rules tailored to your organization.
             </p>
           </div>
@@ -197,7 +197,7 @@ export default function RulesModule() {
                 setShowCreateModal(true);
                 setFormError(null);
               }}
-              className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-brand-600/30 shrink-0"
+              className="px-3.5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow-sm shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>Create Custom Rule</span>
@@ -206,14 +206,14 @@ export default function RulesModule() {
         </div>
 
         {/* Tab & Filter Controls */}
-        <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800">
+        <div className="pt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab("all")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                 activeTab === "all"
                   ? "bg-brand-600 text-white shadow-sm"
-                  : "bg-slate-800/80 text-slate-300 hover:text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
               }`}
             >
               All Rules ({rules.length})
@@ -223,7 +223,7 @@ export default function RulesModule() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                 activeTab === "custom"
                   ? "bg-brand-600 text-white shadow-sm"
-                  : "bg-slate-800/80 text-slate-300 hover:text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
               }`}
             >
               Custom Policies ({customCount})
@@ -233,7 +233,7 @@ export default function RulesModule() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
                 activeTab === "guide"
                   ? "bg-brand-600 text-white shadow-sm"
-                  : "bg-slate-800/80 text-slate-300 hover:text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
@@ -245,7 +245,7 @@ export default function RulesModule() {
             <select
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg py-1.5 px-3 text-xs text-slate-300 focus:outline-none focus:border-brand-500"
+              className="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg py-1.5 px-3 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-500"
             >
               <option value="">All Severities</option>
               <option value="critical">Critical</option>
@@ -255,7 +255,7 @@ export default function RulesModule() {
             </select>
             <button
               onClick={fetchRules}
-              className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition"
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
               title="Refresh Catalog"
             >
               <RefreshCw className="w-4 h-4" />
@@ -281,7 +281,7 @@ export default function RulesModule() {
                         {rule.name}
                       </span>
                       {isCustom ? (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 font-semibold">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 font-semibold">
                           Custom
                         </span>
                       ) : (

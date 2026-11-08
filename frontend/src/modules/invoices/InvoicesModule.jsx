@@ -9,14 +9,18 @@ import {
   AlertTriangle,
   X,
   RefreshCw,
+  Calculator,
+  Percent,
+  Trash2,
 } from "lucide-react";
 import { api } from "../../api/client";
 
-export default function InvoicesModule() {
+export default function InvoicesModule({ onNavigate }) {
   const [invoices, setInvoices] = useState([]);
   const [findings, setFindings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [removeGST, setRemoveGST] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
@@ -51,6 +55,21 @@ export default function InvoicesModule() {
     return findings.filter((f) => f.invoice_id === invoiceId);
   };
 
+  const handleDeleteInvoice = async (invoiceId, invoiceNumber) => {
+    if (!window.confirm(`Are you sure you want to delete invoice "${invoiceNumber || invoiceId}" and its findings?`)) {
+      return;
+    }
+    try {
+      await api.invoices.delete(invoiceId);
+      if (selectedInvoice && selectedInvoice.id === invoiceId) {
+        setSelectedInvoice(null);
+      }
+      await fetchData();
+    } catch (err) {
+      alert("Failed to delete invoice: " + err.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header & Search Bar */}
@@ -65,7 +84,20 @@ export default function InvoicesModule() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Remove GST Toggle */}
+          <button
+            onClick={() => setRemoveGST(!removeGST)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition border ${
+              removeGST
+                ? "bg-brand-600 text-white border-brand-500 shadow-sm"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            <Calculator className="w-3.5 h-3.5" />
+            <span>{removeGST ? "Viewing: Net (Ex-GST)" : "Remove GST / Net View"}</span>
+          </button>
+
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
             <input
@@ -130,12 +162,40 @@ export default function InvoicesModule() {
                       <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-200">
                         {inv.vendor_name}
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100">
-                        ₹
-                        {parseFloat(inv.total_amount || 0).toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                      <td className="py-3 px-4 font-mono font-medium text-slate-900 dark:text-slate-100">
+                        {removeGST ? (
+                          <div>
+                            <span className="font-bold text-brand-600 dark:text-brand-400 block">
+                              ₹
+                              {(
+                                parseFloat(inv.net_amount) ||
+                                parseFloat(inv.total_amount) / 1.18
+                              ).toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-sans">
+                              Ex-Tax (GST: ₹
+                              {(
+                                parseFloat(inv.tax_amount) ||
+                                parseFloat(inv.total_amount) - parseFloat(inv.total_amount) / 1.18
+                              ).toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                              )
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="font-bold">
+                            ₹
+                            {parseFloat(inv.total_amount || 0).toLocaleString("en-IN", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
                         {inv.invoice_date || "—"}
@@ -162,15 +222,27 @@ export default function InvoicesModule() {
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedInvoice(inv);
-                          }}
-                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-[11px] transition"
-                        >
-                          View Details
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedInvoice(inv);
+                            }}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-[11px] font-medium transition"
+                          >
+                            Details
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteInvoice(inv.id, inv.invoice_number);
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 transition"
+                            title="Delete Invoice"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

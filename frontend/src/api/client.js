@@ -58,10 +58,13 @@ export const api = {
   },
 
   documents: {
-    upload: (file, docType = "invoice", idempotencyKey = "") => {
+    upload: (file, docType = "invoice", idempotencyKey = "", projectId = "") => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("doc_type", docType);
+      if (projectId) {
+        formData.append("project_id", projectId);
+      }
 
       const headers = {};
       if (idempotencyKey) {
@@ -84,11 +87,20 @@ export const api = {
     get: (id) => request(`/documents/${id}`),
 
     getChunks: (id) => request(`/documents/${id}/chunks`),
+
+    delete: (id) =>
+      request(`/documents/${id}`, {
+        method: "DELETE",
+      }),
   },
 
   invoices: {
     list: (limit = 50) => request(`/invoices?limit=${limit}`),
     get: (id) => request(`/invoices/${id}`),
+    delete: (id) =>
+      request(`/invoices/${id}`, {
+        method: "DELETE",
+      }),
   },
 
   findings: {
@@ -107,6 +119,11 @@ export const api = {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, notes }),
+      }),
+
+    delete: (id) =>
+      request(`/findings/${id}`, {
+        method: "DELETE",
       }),
   },
 
@@ -141,6 +158,42 @@ export const api = {
     deleteCustom: (id) =>
       request(`/rules/custom/${id}`, {
         method: "DELETE",
+      }),
+  },
+
+  projects: {
+    list: () => request("/projects"),
+    get: (id) => request(`/projects/${id}`),
+    create: (data) =>
+      request("/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    update: (id, data) =>
+      request(`/projects/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    delete: (id) =>
+      request(`/projects/${id}`, {
+        method: "DELETE",
+      }),
+    getReconciliation: (id) => request(`/projects/${id}/reconciliation`),
+    recordPayment: (projectId, invoiceId, data) =>
+      request(`/projects/${projectId}/invoices/${invoiceId}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    linkInvoice: (projectId, invoiceId) =>
+      request(`/projects/${projectId}/link-invoice/${invoiceId}`, {
+        method: "POST",
+      }),
+    linkDocument: (projectId, documentId) =>
+      request(`/projects/${projectId}/link-document/${documentId}`, {
+        method: "POST",
       }),
   },
 };

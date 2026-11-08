@@ -85,6 +85,24 @@ async def update_finding(
     return FindingRead.model_validate(updated)
 
 
+@router.delete(
+    "/findings/{finding_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an audit finding",
+)
+async def delete_finding(
+    finding_id: uuid.UUID,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    """Delete a finding strictly within caller's tenant."""
+    await FindingService.delete_finding(
+        session=session,
+        tenant_id=current_user.tenant_id,
+        finding_id=finding_id,
+    )
+
+
 @router.get(
     "/audit-logs",
     response_model=list[AuditLogRead],
