@@ -14,16 +14,16 @@ import AuditLogsModule from "./modules/audit-logs/AuditLogsModule";
 import DocsModule from "./modules/docs/DocsModule";
 
 const MODULE_TITLES = {
-  dashboard: "Executive AP Overview & Risk Dashboard",
-  projects: "Audit Projects & Vendor Quotation Baselines",
-  documents: "Document Ingestion & File Processing Queue",
-  invoices: "Extracted Commercial Invoices & Metadata",
-  reconciliation: "Financial Reconciliation, Over-Logging & GST Dissection",
-  findings: "Audit Findings & Fraud Investigation",
-  rules: "Audit Rules & Tenant Policy Builder",
-  assistant: "AI Audit Assistant (Google AI Studio Gemini + RAG)",
-  "audit-logs": "Immutable Compliance & Operations Trail",
-  docs: "AuditFlow Platform Guide & Documentation",
+  dashboard: "Dashboard",
+  projects: "Projects",
+  documents: "Documents",
+  invoices: "Commercial Records",
+  reconciliation: "Reconciliation",
+  findings: "Audit Findings",
+  rules: "Rules & Policies",
+  assistant: "AI Assistant",
+  "audit-logs": "Audit Trail",
+  docs: "Documentation",
 };
 
 export default function App() {

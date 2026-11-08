@@ -23,6 +23,7 @@ import {
 import { api } from "../../api/client";
 import { DEMO_DOCUMENTS } from "../../data/demoDocuments";
 import { useProject } from "../../context/ProjectContext";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 export default function DocumentsModule({ onNavigate }) {
   const { projects, selectedProjectId } = useProject();
@@ -97,15 +98,25 @@ export default function DocumentsModule({ onNavigate }) {
     }
   };
 
-  const handleDeleteDocument = async (docId, filename) => {
-    if (!window.confirm(`Are you sure you want to delete "${filename}" and all its extracted chunks?`)) {
-      return;
-    }
+  // Delete confirmation modal state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (doc) => {
+    setDeleteTarget({ id: doc.id, name: doc.filename });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await api.documents.delete(docId);
+      await api.documents.delete(deleteTarget.id);
+      setDeleteTarget(null);
       await fetchDocuments();
     } catch (err) {
       alert("Failed to delete document: " + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -368,7 +379,7 @@ export default function DocumentsModule({ onNavigate }) {
                           <span>Chunks</span>
                         </button>
                         <button
-                          onClick={() => handleDeleteDocument(d.id, d.filename)}
+                          onClick={() => handleDeleteClick(d)}
                           className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 transition"
                           title="Delete Document"
                         >
@@ -679,6 +690,18 @@ export default function DocumentsModule({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Tailwind Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Ingested Document"
+        message="Permanently remove this commercial file and its vector chunks from pgvector. Extracted invoices will be preserved unless explicitly deleted."
+        itemName={deleteTarget?.name}
+        confirmLabel="Delete Document"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

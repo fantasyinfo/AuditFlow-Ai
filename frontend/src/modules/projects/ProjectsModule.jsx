@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { api } from "../../api/client";
 import { useProject } from "../../context/ProjectContext";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 export function ProjectsModule({ onNavigate }) {
   const { projects, refreshProjects, selectProject, selectedProjectId } = useProject();
@@ -104,17 +105,30 @@ export function ProjectsModule({ onNavigate }) {
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete audit project '${name}'?`)) return;
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = (id, name) => {
+    setDeleteTarget({ id, name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await api.projects.delete(id);
+      await api.projects.delete(deleteTarget.id);
+      setDeleteTarget(null);
       await refreshProjects();
     } catch (err) {
       if (err.status === 404 || err.message?.toLowerCase().includes("not found")) {
+        setDeleteTarget(null);
         await refreshProjects();
       } else {
         alert("Failed to delete project: " + err.message);
       }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -588,6 +602,18 @@ export function ProjectsModule({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Tailwind Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Audit Project"
+        message="Permanently remove this audit engagement workspace and quotation baseline. Invoices linked to this project will remain in the tenant."
+        itemName={deleteTarget?.name}
+        confirmLabel="Delete Project"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

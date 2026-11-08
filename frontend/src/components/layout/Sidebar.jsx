@@ -55,14 +55,9 @@ export default function Sidebar({ currentModule, onSelectModule }) {
           <ShieldCheck className="w-5 h-5" />
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight truncate">
-              AuditFlow AI
-            </span>
-            <span className="text-[10px] font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-500/20 px-1 py-0.2 rounded">
-              MVP
-            </span>
-          </div>
+          <span className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight truncate block">
+            AuditFlow AI
+          </span>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">AP Audit & Fraud Detection</p>
         </div>
       </div>

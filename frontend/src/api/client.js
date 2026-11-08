@@ -19,9 +19,21 @@ async function request(url, options = {}) {
     headers,
   });
 
+  if (response.status === 204) {
+    return null;
+  }
+
   const contentType = response.headers.get("content-type");
   const isJson = contentType && contentType.includes("application/json");
-  const data = isJson ? await response.json() : await response.text();
+  let data = null;
+  try {
+    const text = await response.text();
+    if (text && text.trim()) {
+      data = isJson ? JSON.parse(text) : text;
+    }
+  } catch (parseErr) {
+    data = null;
+  }
 
   if (!response.ok) {
     const errorMsg = (data && data.detail) || `Request failed with status ${response.status}`;

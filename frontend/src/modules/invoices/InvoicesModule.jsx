@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "../../api/client";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 export default function InvoicesModule({ onNavigate }) {
   const [invoices, setInvoices] = useState([]);
@@ -55,18 +56,28 @@ export default function InvoicesModule({ onNavigate }) {
     return findings.filter((f) => f.invoice_id === invoiceId);
   };
 
-  const handleDeleteInvoice = async (invoiceId, invoiceNumber) => {
-    if (!window.confirm(`Are you sure you want to delete invoice "${invoiceNumber || invoiceId}" and its findings?`)) {
-      return;
-    }
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (inv) => {
+    setDeleteTarget({ id: inv.id, name: `${inv.invoice_number || "Invoice"} (${inv.vendor_name})` });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await api.invoices.delete(invoiceId);
-      if (selectedInvoice && selectedInvoice.id === invoiceId) {
+      await api.invoices.delete(deleteTarget.id);
+      if (selectedInvoice && selectedInvoice.id === deleteTarget.id) {
         setSelectedInvoice(null);
       }
+      setDeleteTarget(null);
       await fetchData();
     } catch (err) {
       alert("Failed to delete invoice: " + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -235,7 +246,7 @@ export default function InvoicesModule({ onNavigate }) {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteInvoice(inv.id, inv.invoice_number);
+                              handleDeleteClick(inv);
                             }}
                             className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-800 transition"
                             title="Delete Invoice"
@@ -346,6 +357,18 @@ export default function InvoicesModule({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Tailwind Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Commercial Invoice"
+        message="Permanently remove this invoice record and its associated audit findings. This cannot be undone."
+        itemName={deleteTarget?.name}
+        confirmLabel="Delete Invoice"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "../../api/client";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 export default function FindingsModule() {
   const [findings, setFindings] = useState([]);
@@ -64,13 +65,25 @@ export default function FindingsModule() {
     }
   };
 
-  const handleDeleteFinding = async (findingId, rule) => {
-    if (!window.confirm(`Are you sure you want to delete finding "${rule}"?`)) return;
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (f) => {
+    setDeleteTarget({ id: f.id, name: `${f.rule} (#${f.id.slice(0, 8)})` });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      await api.findings.delete(findingId);
-      fetchFindings();
+      await api.findings.delete(deleteTarget.id);
+      setDeleteTarget(null);
+      await fetchFindings();
     } catch (err) {
       alert("Failed to delete finding: " + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -214,7 +227,7 @@ export default function FindingsModule() {
                             </span>
                           )}
                           <button
-                            onClick={() => handleDeleteFinding(f.id, f.rule)}
+                            onClick={() => handleDeleteClick(f)}
                             className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:border-rose-800 transition"
                             title="Delete Finding"
                           >
@@ -295,6 +308,18 @@ export default function FindingsModule() {
           </div>
         </div>
       )}
+
+      {/* Tailwind Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Audit Finding"
+        message="Permanently remove this audit finding violation from the tenant ledger."
+        itemName={deleteTarget?.name}
+        confirmLabel="Delete Finding"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

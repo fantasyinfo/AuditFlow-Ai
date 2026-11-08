@@ -11,10 +11,7 @@ export default function AppLayout({ currentModule, onSelectModule, moduleTitle, 
       {/* Main App Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Navbar */}
-        <Navbar
-          currentModuleTitle={moduleTitle}
-          onNavigateDocs={() => onSelectModule("docs")}
-        />
+        <Navbar currentModuleTitle={moduleTitle} />
 
         {/* Scrollable Viewport */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-100/70 dark:bg-slate-950 transition-colors">
