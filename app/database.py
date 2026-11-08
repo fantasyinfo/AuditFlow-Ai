@@ -1,5 +1,6 @@
 import os
 from collections.abc import AsyncGenerator, Generator
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -8,6 +9,44 @@ from sqlalchemy.pool import NullPool
 from app.config import get_settings
 
 settings = get_settings()
+
+
+def normalize_async_database_url(url: str) -> str:
+    """Normalize database connection string for asyncpg (used by FastAPI)."""
+    if not url:
+        return url
+    if url.startswith("postgres://"):
+        url = "postgresql+asyncpg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+
+    try:
+        parsed = urlparse(url)
+        query_params = dict(parse_qsl(parsed.query))
+        # Remove parameters not accepted by asyncpg
+        query_params.pop("channel_binding", None)
+        # asyncpg prefers ssl= over sslmode=
+        if "sslmode" in query_params:
+            ssl_val = query_params.pop("sslmode")
+            if "ssl" not in query_params:
+                query_params["ssl"] = ssl_val
+
+        new_query = urlencode(query_params)
+        return urlunparse(parsed._replace(query=new_query))
+    except Exception:
+        return url
+
+
+def normalize_sync_database_url(url: str) -> str:
+    """Normalize database connection string for psycopg2 (used by workers and migrations)."""
+    if not url:
+        return url
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg2://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+psycopg2://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql://"):]
+    return url
+
 
 is_serverless = bool(os.environ.get("VERCEL"))
 async_engine_kwargs = {"echo": False, "future": True}
@@ -22,7 +61,7 @@ else:
 
 # Asynchronous engine & session for FastAPI routes (asyncpg)
 async_engine = create_async_engine(
-    settings.DATABASE_URL,
+    normalize_async_database_url(settings.DATABASE_URL),
     **async_engine_kwargs,
 )
 
@@ -36,7 +75,7 @@ AsyncSessionLocal = async_sessionmaker(
 
 # Synchronous engine & session for Celery workers & migrations (psycopg2)
 sync_engine = create_engine(
-    settings.SYNC_DATABASE_URL,
+    normalize_sync_database_url(settings.SYNC_DATABASE_URL),
     **sync_engine_kwargs,
 )
 
